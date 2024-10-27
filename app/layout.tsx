@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { PinProvider } from "@/context/PinContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { Navigation } from "@/components/Navigation";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -25,10 +28,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body>
+        <PinProvider>
+          <ProtectedRoute>
+            {children}
+            <Navigation />
+          </ProtectedRoute>
+        </PinProvider>
       </body>
     </html>
   );

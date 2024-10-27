@@ -272,23 +272,7 @@ export default async function BabyPage({
             </form>
          </div>
 
-         {/* Navigation */}
-         <nav className="fixed bottom-4 left-4 right-4 bg-baby-light rounded-full shadow-lg p-4 backdrop-blur-sm">
-            <div className="flex justify-around max-w-md mx-auto">
-               <a
-                  href={`/babies/${baby.id}`}
-                  className="text-baby-accent hover:text-baby-soft transition-colors font-medium"
-               >
-                  Dashboard
-               </a>
-               <a
-                  href={`/babies/${baby.id}/statistics`}
-                  className="text-baby-accent hover:text-baby-soft transition-colors font-medium"
-               >
-                  Statistics
-               </a>
-            </div>
-         </nav>
+        
       </div>
    )
 }

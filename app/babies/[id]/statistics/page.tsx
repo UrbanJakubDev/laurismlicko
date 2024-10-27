@@ -26,7 +26,7 @@ export default async function StatisticsPage({
    if (!baby) return <div>Baby not found</div>
 
    return (
-      <div className="max-w-md mx-auto p-4 space-y-6">
+      <div className="max-w-md mx-auto p-4 pb-20 space-y-6">
          <div className="text-center">
             <h1 className="text-2xl font-bold text-baby-accent mb-1">{baby.name}'s Statistics</h1>
             <p className="text-baby-soft">Growth & Health Tracking</p>
@@ -128,17 +128,7 @@ export default async function StatisticsPage({
             </div>
          </div>
 
-         {/* Navigation */}
-         <nav className="fixed bottom-4 left-4 right-4 bg-baby-light rounded-full shadow-lg p-4">
-            <div className="flex justify-around">
-               <a href={`/babies/${baby.id}`} className="text-baby-accent hover:text-baby-soft transition-colors">
-                  Dashboard
-               </a>
-               <a href={`/babies/${baby.id}/statistics`} className="text-baby-accent hover:text-baby-soft transition-colors">
-                  Statistics
-               </a>
-            </div>
-         </nav>
+        
       </div>
    )
 }
