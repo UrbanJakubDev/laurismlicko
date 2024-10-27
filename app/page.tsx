@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createBaby } from './actions'
 import { prisma } from '@/lib/prisma'
+import { SubmitButton } from '@/components/SubmitButton'
 
 export default async function Home() {
   const babies = await prisma.baby.findMany({
@@ -30,9 +31,7 @@ export default async function Home() {
             className="border p-2 rounded w-full"
           />
         </div>
-        <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
-          Add Baby
-        </button>
+        <SubmitButton>Create Baby</SubmitButton>
       </form>
 
       <div className="space-y-4">

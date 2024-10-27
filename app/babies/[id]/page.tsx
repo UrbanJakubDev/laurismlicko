@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { createMeasurement, createFeed, getFeedStats, createPoop, deleteFeed } from '@/app/actions'
 import { format, addHours } from 'date-fns'
 import { DeleteButton } from '@/components/DeleteButton'
+import { SubmitButton } from '@/components/SubmitButton'
 
 export default async function BabyPage({
    params,
@@ -102,12 +103,9 @@ export default async function BabyPage({
                      className="w-full p-3 border border-baby-pink/20 rounded-xl bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
                   />
                </div>
-               <button
-                  type="submit"
-                  className="w-full bg-baby-accent text-white py-3 rounded-xl hover:bg-baby-soft transition-colors duration-200"
-               >
+               <SubmitButton>
                   Add Feed
-               </button>
+               </SubmitButton>
             </form>
          </div>
 
@@ -208,12 +206,9 @@ export default async function BabyPage({
                      placeholder="Enter height in cm"
                   />
                </div>
-               <button
-                  type="submit"
-                  className="w-full bg-baby-accent text-white py-3 rounded-xl hover:bg-baby-soft transition-colors duration-200"
-               >
+               <SubmitButton>
                   Add Measurement
-               </button>
+               </SubmitButton>
             </form>
          </div>
 
@@ -271,12 +266,9 @@ export default async function BabyPage({
                      placeholder="Enter amount in grams"
                   />
                </div>
-               <button
-                  type="submit"
-                  className="w-full bg-baby-accent text-white py-3 rounded-xl hover:bg-baby-soft transition-colors duration-200"
-               >
+               <SubmitButton>
                   Record Diaper Change
-               </button>
+               </SubmitButton>
             </form>
          </div>
 
