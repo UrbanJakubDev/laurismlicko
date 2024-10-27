@@ -2,7 +2,11 @@
 import { prisma } from '@/lib/prisma'
 import { format } from 'date-fns'
 
-export default async function StatisticsPage({ params }: { params: { id: string } }) {
+export default async function StatisticsPage({
+   params,
+ }: {
+   params: { id: string }
+ }) {
   const babyId = parseInt(params.id)
   
   const baby = await prisma.baby.findUnique({

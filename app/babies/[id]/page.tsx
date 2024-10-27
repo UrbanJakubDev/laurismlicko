@@ -3,7 +3,11 @@ import { prisma } from '@/lib/prisma'
 import { createMeasurement, createFeed, getFeedStats, createPoop } from '@/app/actions'
 import { format, addHours } from 'date-fns'
 
-export default async function BabyPage({ params }: { params: { id: string } }) {
+export default async function BabyPage({
+   params,
+ }: {
+   params: { id: string }
+ }) {
    const { id } = await params
    const babyId = parseInt(id)
    const today = new Date()
