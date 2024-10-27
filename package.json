@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "prisma generate && prisma migrate delpoy && next build --no-lint",
+    "build": "prisma generate && prisma migrate deploy && next build --no-lint",
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint"
