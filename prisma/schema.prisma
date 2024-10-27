@@ -5,9 +5,16 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// datasource db {
+//   provider = "sqlite"
+//   url      = env("DATABASE_URL")
+// }
+
+// Change this part
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider = "postgresql" // changed from "sqlite"
+  url      = env("POSTGRES_PRISMA_URL") // changed from DATABASE_URL
+  directUrl = env("POSTGRES_URL_NON_POOLING") // needed for migrations
 }
 
 // prisma/schema.prisma
