@@ -104,3 +104,25 @@ export async function createPoop(formData: FormData) {
    })
    revalidatePath(`/babies/${babyId}`)
  }
+
+
+ export async function deleteMeasurement(formData: FormData) {
+  const id = parseInt(formData.get('id') as string)
+  const babyId = parseInt(formData.get('babyId') as string)
+  await prisma.babyMeasurement.delete({ where: { id } })
+  revalidatePath(`/babies/${babyId}`)
+}
+
+export async function deleteFeed(formData: FormData) {
+  const id = parseInt(formData.get('id') as string)
+  const babyId = parseInt(formData.get('babyId') as string)
+  await prisma.feed.delete({ where: { id } })
+  revalidatePath(`/babies/${babyId}`)
+}
+
+export async function deletePoop(formData: FormData) {
+  const id = parseInt(formData.get('id') as string)
+  const babyId = parseInt(formData.get('babyId') as string)
+  await prisma.poop.delete({ where: { id } })
+  revalidatePath(`/babies/${babyId}`)
+}

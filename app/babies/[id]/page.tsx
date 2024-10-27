@@ -1,13 +1,14 @@
 // app/babies/[id]/page.tsx
 import { prisma } from '@/lib/prisma'
-import { createMeasurement, createFeed, getFeedStats, createPoop } from '@/app/actions'
+import { createMeasurement, createFeed, getFeedStats, createPoop, deleteFeed } from '@/app/actions'
 import { format, addHours } from 'date-fns'
+import { DeleteButton } from '@/components/DeleteButton'
 
 export default async function BabyPage({
    params,
- }: {
+}: {
    params: { id: string }
- }) {
+}) {
    const { id } = await params
    const babyId = parseInt(id)
    const today = new Date()
@@ -120,6 +121,7 @@ export default async function BabyPage({
                         <th className="py-2 px-4 text-left text-baby-soft">Time</th>
                         <th className="py-2 px-4 text-right text-baby-soft">Amount</th>
                         <th className="py-2 px-4 text-right text-baby-soft">Next Feed</th>
+                        <th className="py-2 px-4 text-right text-baby-soft">Actions</th>
                      </tr>
                   </thead>
                   <tbody>
@@ -129,6 +131,13 @@ export default async function BabyPage({
                            <td className="py-3 px-4 text-right">{feed.amount}ml</td>
                            <td className="py-3 px-4 text-right">
                               {format(addHours(feed.feedTime, 3), 'HH:mm')}
+                           </td>
+                           <td className="py-3 px-4 text-right">
+                              <DeleteButton
+                                 onDelete={deleteFeed}
+                                 id={feed.id}
+                                 babyId={baby.id}
+                              />
                            </td>
                         </tr>
                      ))}
