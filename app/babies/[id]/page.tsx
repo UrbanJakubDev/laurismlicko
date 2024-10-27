@@ -1,95 +1,11 @@
-'use client'
+
 // app/babies/[id]/page.tsx
 import { prisma } from '@/lib/prisma'
-import { createMeasurement, createFeed, getFeedStats, createPoop, deleteFeed } from '@/app/actions'
-import { format, addHours } from 'date-fns'
-import { DeleteButton } from '@/components/DeleteButton'
+import { createMeasurement, createFeed, getFeedStats, createPoop } from '@/app/actions'
 import { SubmitButton } from '@/components/SubmitButton'
-import { DayPicker } from '@/components/DatePicker'
-import { useState } from 'react'
+import { FeedSection } from '@/components/FeedSection'
 
 
-// Create a client component for the feeds section
-function FeedSection({ 
-   initialStats, 
-   baby 
- }: { 
-   initialStats: Awaited<ReturnType<typeof getFeedStats>>
-   baby: any // Add proper type based on your prisma schema
- }) {
-   const [selectedDate, setSelectedDate] = useState(new Date())
-   const [stats, setStats] = useState(initialStats)
- 
-   const handleDateChange = async (date: Date) => {
-     setSelectedDate(date)
-     // Fetch stats for the selected date
-     const response = await fetch(`/api/feeds?babyId=${baby.id}&date=${format(date, 'yyyy-MM-dd')}`)
-     const newStats = await response.json()
-     setStats(newStats)
-   }
- 
-   return (
-     <div className="bg-baby-light rounded-2xl shadow-lg p-6">
-       <h2 className="text-lg font-semibold text-baby-accent mb-4">Feed History</h2>
-       
-       <DayPicker 
-         selectedDate={selectedDate} 
-         onChange={handleDateChange}
-       />
- 
-       {/* Stats Summary */}
-       <div className="grid grid-cols-2 gap-4 mb-6">
-         <div className="bg-baby-rose/20 p-4 rounded-xl text-center">
-           <p className="text-sm text-baby-soft mb-1">Total Feeds</p>
-           <p className="text-xl font-semibold">{stats.feedCount}/8</p>
-         </div>
-         <div className="bg-baby-rose/20 p-4 rounded-xl text-center">
-           <p className="text-sm text-baby-soft mb-1">Total Amount</p>
-           <p className="text-xl font-semibold">{stats.totalMilk}ml</p>
-         </div>
-       </div>
- 
-       {/* Feeds Table */}
-       <div className="overflow-x-auto">
-         <table className="w-full">
-           <thead>
-             <tr className="border-b border-baby-pink/30">
-               <th className="py-2 px-4 text-left text-baby-soft">Time</th>
-               <th className="py-2 px-4 text-right text-baby-soft">Amount</th>
-               <th className="py-2 px-4 text-right text-baby-soft">Next Feed</th>
-               <th className="py-2 px-4 text-right text-baby-soft">Actions</th>
-             </tr>
-           </thead>
-           <tbody>
-             {stats.feeds.map((feed) => (
-               <tr key={feed.id} className="border-b border-baby-pink/10 hover:bg-baby-rose/30 transition-colors">
-                 <td className="py-3 px-4">{format(new Date(feed.feedTime), 'HH:mm')}</td>
-                 <td className="py-3 px-4 text-right">{feed.amount}ml</td>
-                 <td className="py-3 px-4 text-right">
-                   {format(addHours(new Date(feed.feedTime), 3), 'HH:mm')}
-                 </td>
-                 <td className="py-3 px-4 text-right">
-                   <DeleteButton 
-                     onDelete={deleteFeed}
-                     id={feed.id}
-                     babyId={baby.id}
-                   />
-                 </td>
-               </tr>
-             ))}
-             {stats.feeds.length === 0 && (
-               <tr>
-                 <td colSpan={4} className="py-8 text-center text-baby-soft">
-                   No feeds recorded for this day
-                 </td>
-               </tr>
-             )}
-           </tbody>
-         </table>
-       </div>
-     </div>
-   )
- }
 
 export default async function BabyPage({
    params,
@@ -192,7 +108,10 @@ export default async function BabyPage({
          </div>
 
          {/* Feed History */}
-         <FeedSection initialStats={stats} baby={baby} />
+         <FeedSection 
+        initialStats={stats} 
+        babyId={baby.id} 
+      />
 
          {/* Latest Measurements */}
          <div className="bg-baby-light rounded-2xl shadow-lg p-6">
