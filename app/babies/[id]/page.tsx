@@ -5,6 +5,7 @@ import { createMeasurement, createFeed, getFeedStats, createPoop } from '@/app/a
 import { SubmitButton } from '@/components/SubmitButton'
 import { FeedSection } from '@/components/FeedSection'
 import { format } from 'date-fns'
+import { formatInTimeZone } from 'date-fns-tz'
 
 
 
@@ -89,7 +90,7 @@ export default async function BabyPage({
                      type="datetime-local"
                      name="feedTime"
                      required
-                     defaultValue={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
+                     defaultValue={formatInTimeZone(new Date(), 'Europe/Prague', "yyyy-MM-dd'T'HH:mm")}
                      className="w-full p-3 border border-baby-pink/20 rounded-xl bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
                   />
                </div>
@@ -183,12 +184,12 @@ export default async function BabyPage({
             <form action={createPoop} className="space-y-4">
                <input type="hidden" name="babyId" value={baby.id} />
                <div className="space-y-2">
-                  <label className="block text-sm text-baby-soft">Time</label>
+                  <label className="block text-sm text-baby-soft">Feed Time</label>
                   <input
                      type="datetime-local"
-                     name="poopTime"
-                     defaultValue={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
+                     name="feedTime"
                      required
+                     defaultValue={formatInTimeZone(new Date(), 'Europe/Prague', "yyyy-MM-dd'T'HH:mm")}
                      className="w-full p-3 border border-baby-pink/20 rounded-xl bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
                   />
                </div>

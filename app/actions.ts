@@ -43,14 +43,13 @@ export async function createFeed(formData: FormData) {
   const feedTimeStr = formData.get('feedTime') as string
   const amount = parseInt(formData.get('amount') as string)
 
-  // Convert local time to UTC for storage
-  const localDate = new Date(feedTimeStr)
-  const utcDate = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000)
+  // Store the time exactly as received
+  const feedTime = new Date(feedTimeStr)
 
   await prisma.feed.create({
     data: { 
       babyId, 
-      feedTime: utcDate,
+      feedTime,
       amount 
     }
   })

@@ -11,30 +11,16 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Missing parameters' }, { status: 400 })
   }
 
-  const localDate = new Date(dateStr)
-  const startDate = new Date(
-    localDate.getFullYear(),
-    localDate.getMonth(),
-    localDate.getDate(),
-    0, 0, 0
-  )
-  const endDate = new Date(
-    localDate.getFullYear(),
-    localDate.getMonth(),
-    localDate.getDate(),
-    23, 59, 59
-  )
-
-  // Convert to UTC for database query
-  const utcStartDate = new Date(startDate.getTime() - startDate.getTimezoneOffset() * 60000)
-  const utcEndDate = new Date(endDate.getTime() - endDate.getTimezoneOffset() * 60000)
+  const date = new Date(dateStr)
+  const startDate = new Date(date.setHours(0, 0, 0, 0))
+  const endDate = new Date(date.setHours(23, 59, 59, 999))
 
   const feeds = await prisma.feed.findMany({
     where: {
       babyId: parseInt(babyId),
       feedTime: {
-        gte: utcStartDate,
-        lte: utcEndDate
+        gte: startDate,
+        lte: endDate
       }
     },
     orderBy: { feedTime: 'desc' }

@@ -5,6 +5,7 @@ import { format, addHours, parseISO } from 'date-fns'
 import { deleteFeed } from '@/app/actions'
 import { DayPicker } from './DatePicker'
 import { DeleteButton } from './DeleteButton'
+import { formatInTimeZone } from 'date-fns-tz'
 
 type FeedStats = {
    feeds: any[]
@@ -72,17 +73,20 @@ export function FeedSection({
                   {stats.feeds.map((feed) => (
                      <tr key={feed.id} className="border-b border-baby-pink/10 hover:bg-baby-rose/30 transition-colors">
                         <td className="py-3 px-4">
-                           {format(
-                              new Date(new Date(feed.feedTime).getTime() + new Date().getTimezoneOffset() * 60000),
-                              'HH:mm'
-                           )}
+                           {new Date(feed.feedTime).toLocaleTimeString('cs-CZ', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: false
+                           })}
                         </td>
                         <td className="py-3 px-4 text-right">{feed.amount}ml</td>
                         <td className="py-3 px-4 text-right">
-                           {format(
-                              new Date(new Date(feed.feedTime).getTime() + new Date().getTimezoneOffset() * 60000 + 3 * 3600000),
-                              'HH:mm'
-                           )}
+                           {new Date(new Date(feed.feedTime).getTime() + 3 * 60 * 60 * 1000)
+                              .toLocaleTimeString('cs-CZ', {
+                                 hour: '2-digit',
+                                 minute: '2-digit',
+                                 hour12: false
+                              })}
                         </td>
                         <td className="py-3 px-4 text-right">
                            <DeleteButton
