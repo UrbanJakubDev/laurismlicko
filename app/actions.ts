@@ -40,14 +40,17 @@ export async function createMeasurement(formData: FormData) {
 
 export async function createFeed(formData: FormData) {
   const babyId = parseInt(formData.get('babyId') as string)
-  // Parse the local datetime string and convert to ISO string
-  const feedTimeLocal = new Date(formData.get('feedTime') as string)
+  const feedTimeStr = formData.get('feedTime') as string
   const amount = parseInt(formData.get('amount') as string)
+
+  // Convert local time to UTC for storage
+  const localDate = new Date(feedTimeStr)
+  const utcDate = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000)
 
   await prisma.feed.create({
     data: { 
       babyId, 
-      feedTime: feedTimeLocal.toISOString(), // Store as UTC in database
+      feedTime: utcDate,
       amount 
     }
   })

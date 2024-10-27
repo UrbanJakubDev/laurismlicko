@@ -1,8 +1,7 @@
-// app/api/feeds/route.ts
-import { prisma } from '@/lib/prisma'
-import { NextResponse } from 'next/server'
-import { startOfDay, endOfDay } from 'date-fns'
+import { prisma } from "@/lib/prisma"
+import { NextResponse } from "next/server"
 
+// app/api/feeds/route.ts
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const babyId = searchParams.get('babyId')
@@ -12,17 +11,30 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Missing parameters' }, { status: 400 })
   }
 
-  // Convert local date to UTC for database query
   const localDate = new Date(dateStr)
-  const startDate = startOfDay(localDate)
-  const endDate = endOfDay(localDate)
+  const startDate = new Date(
+    localDate.getFullYear(),
+    localDate.getMonth(),
+    localDate.getDate(),
+    0, 0, 0
+  )
+  const endDate = new Date(
+    localDate.getFullYear(),
+    localDate.getMonth(),
+    localDate.getDate(),
+    23, 59, 59
+  )
+
+  // Convert to UTC for database query
+  const utcStartDate = new Date(startDate.getTime() - startDate.getTimezoneOffset() * 60000)
+  const utcEndDate = new Date(endDate.getTime() - endDate.getTimezoneOffset() * 60000)
 
   const feeds = await prisma.feed.findMany({
     where: {
       babyId: parseInt(babyId),
       feedTime: {
-        gte: startDate,
-        lte: endDate
+        gte: utcStartDate,
+        lte: utcEndDate
       }
     },
     orderBy: { feedTime: 'desc' }

@@ -72,11 +72,17 @@ export function FeedSection({
                   {stats.feeds.map((feed) => (
                      <tr key={feed.id} className="border-b border-baby-pink/10 hover:bg-baby-rose/30 transition-colors">
                         <td className="py-3 px-4">
-                           {format(new Date(feed.feedTime), 'HH:mm')}
+                           {format(
+                              new Date(new Date(feed.feedTime).getTime() + new Date().getTimezoneOffset() * 60000),
+                              'HH:mm'
+                           )}
                         </td>
                         <td className="py-3 px-4 text-right">{feed.amount}ml</td>
                         <td className="py-3 px-4 text-right">
-                           {format(addHours(new Date(feed.feedTime), 3), 'HH:mm')}
+                           {format(
+                              new Date(new Date(feed.feedTime).getTime() + new Date().getTimezoneOffset() * 60000 + 3 * 3600000),
+                              'HH:mm'
+                           )}
                         </td>
                         <td className="py-3 px-4 text-right">
                            <DeleteButton
