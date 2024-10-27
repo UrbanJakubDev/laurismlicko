@@ -4,19 +4,12 @@
 generator client {
   provider = "prisma-client-js"
 }
-
-// datasource db {
-//   provider = "sqlite"
-//   url      = env("DATABASE_URL")
-// }
-
 // Change this part
 datasource db {
-  provider = "postgresql" // changed from "sqlite"
-  url      = env("POSTGRES_PRISMA_URL") // changed from DATABASE_URL
-  directUrl = env("POSTGRES_URL_NON_POOLING") // needed for migrations
+  provider = "postgresql"
+  url = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
 }
-
 // prisma/schema.prisma
 model Baby {
   id           Int               @id @default(autoincrement())
