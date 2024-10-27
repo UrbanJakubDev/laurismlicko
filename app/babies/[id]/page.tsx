@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { createMeasurement, createFeed, getFeedStats, createPoop } from '@/app/actions'
 import { SubmitButton } from '@/components/SubmitButton'
 import { FeedSection } from '@/components/FeedSection'
+import { format } from 'date-fns'
 
 
 
@@ -16,17 +17,17 @@ export default async function BabyPage({
    const babyId = parseInt(id)
    const today = new Date()
    const stats = await getFeedStats(babyId, today)
-   
+
    const baby = await prisma.baby.findUnique({
-     where: { id: babyId },
-     include: {
-       measurements: { 
-         orderBy: { createdAt: 'desc' },
-         take: 1
-       }
-     }
+      where: { id: babyId },
+      include: {
+         measurements: {
+            orderBy: { createdAt: 'desc' },
+            take: 1
+         }
+      }
    })
- 
+
    if (!baby) return <div>Baby not found</div>
 
    const latestMeasurement = baby.measurements[0]
@@ -88,6 +89,7 @@ export default async function BabyPage({
                      type="datetime-local"
                      name="feedTime"
                      required
+                     defaultValue={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
                      className="w-full p-3 border border-baby-pink/20 rounded-xl bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
                   />
                </div>
@@ -108,10 +110,10 @@ export default async function BabyPage({
          </div>
 
          {/* Feed History */}
-         <FeedSection 
-        initialStats={stats} 
-        babyId={baby.id} 
-      />
+         <FeedSection
+            initialStats={stats}
+            babyId={baby.id}
+         />
 
          {/* Latest Measurements */}
          <div className="bg-baby-light rounded-2xl shadow-lg p-6">
@@ -185,6 +187,7 @@ export default async function BabyPage({
                   <input
                      type="datetime-local"
                      name="poopTime"
+                     defaultValue={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
                      required
                      className="w-full p-3 border border-baby-pink/20 rounded-xl bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
                   />
@@ -234,7 +237,7 @@ export default async function BabyPage({
             </form>
          </div>
 
-        
+
       </div>
    )
 }

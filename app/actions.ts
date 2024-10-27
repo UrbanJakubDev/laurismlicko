@@ -40,11 +40,16 @@ export async function createMeasurement(formData: FormData) {
 
 export async function createFeed(formData: FormData) {
   const babyId = parseInt(formData.get('babyId') as string)
-  const feedTime = new Date(formData.get('feedTime') as string)
+  // Parse the local datetime string and convert to ISO string
+  const feedTimeLocal = new Date(formData.get('feedTime') as string)
   const amount = parseInt(formData.get('amount') as string)
 
   await prisma.feed.create({
-    data: { babyId, feedTime, amount }
+    data: { 
+      babyId, 
+      feedTime: feedTimeLocal.toISOString(), // Store as UTC in database
+      amount 
+    }
   })
   revalidatePath(`/babies/${babyId}`)
 }
@@ -93,17 +98,23 @@ export async function getFeedStats(babyId: number, date: Date) {
 }
 
 export async function createPoop(formData: FormData) {
-   const babyId = parseInt(formData.get('babyId') as string)
-   const poopTime = new Date(formData.get('poopTime') as string)
-   const color = formData.get('color') as string
-   const consistency = formData.get('consistency') as string
-   const amount = parseInt(formData.get('amount') as string)
- 
-   await prisma.poop.create({
-     data: { babyId, poopTime, color, consistency, amount }
-   })
-   revalidatePath(`/babies/${babyId}`)
- }
+  const babyId = parseInt(formData.get('babyId') as string)
+  const poopTimeLocal = new Date(formData.get('poopTime') as string)
+  const color = formData.get('color') as string
+  const consistency = formData.get('consistency') as string
+  const amount = parseInt(formData.get('amount') as string)
+
+  await prisma.poop.create({
+    data: {
+      babyId,
+      poopTime: poopTimeLocal.toISOString(),
+      color,
+      consistency,
+      amount
+    }
+  })
+  revalidatePath(`/babies/${babyId}`)
+}
 
 
  export async function deleteMeasurement(formData: FormData) {

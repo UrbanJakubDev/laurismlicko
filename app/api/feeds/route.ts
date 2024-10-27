@@ -12,9 +12,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Missing parameters' }, { status: 400 })
   }
 
-  const date = new Date(dateStr)
-  const startDate = startOfDay(date)
-  const endDate = endOfDay(date)
+  // Convert local date to UTC for database query
+  const localDate = new Date(dateStr)
+  const startDate = startOfDay(localDate)
+  const endDate = endOfDay(localDate)
 
   const feeds = await prisma.feed.findMany({
     where: {
