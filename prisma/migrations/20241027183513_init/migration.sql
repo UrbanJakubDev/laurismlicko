@@ -1,0 +1,44 @@
+-- CreateTable
+CREATE TABLE "Baby" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    "name" TEXT NOT NULL,
+    "birthday" DATETIME NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "BabyMeasurement" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    "babyId" INTEGER NOT NULL,
+    "weight" REAL NOT NULL,
+    "height" REAL NOT NULL,
+    "dailyMilkAmount" REAL NOT NULL,
+    CONSTRAINT "BabyMeasurement_babyId_fkey" FOREIGN KEY ("babyId") REFERENCES "Baby" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "Feed" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    "babyId" INTEGER NOT NULL,
+    "feedTime" DATETIME NOT NULL,
+    "amount" REAL NOT NULL,
+    CONSTRAINT "Feed_babyId_fkey" FOREIGN KEY ("babyId") REFERENCES "Baby" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "Poop" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    "babyId" INTEGER NOT NULL,
+    "poopTime" DATETIME NOT NULL,
+    "color" TEXT NOT NULL,
+    "consistency" TEXT NOT NULL,
+    "amount" REAL NOT NULL,
+    CONSTRAINT "Poop_babyId_fkey" FOREIGN KEY ("babyId") REFERENCES "Baby" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);

@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// prisma/schema.prisma
+model Baby {
+  id           Int               @id @default(autoincrement())
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  name         String
+  birthday     DateTime
+  measurements BabyMeasurement[]
+  feeds        Feed[]
+  poops        Poop[]
+}
+
+model BabyMeasurement {
+  id                    Int      @id @default(autoincrement())
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  babyId               Int
+  baby                 Baby     @relation(fields: [babyId], references: [id])
+  weight               Int      // in grams
+  height               Float    // in cm
+  dailyMilkAmount      Int      // calculated from weight
+  feedsPerDay          Int      @default(8)
+  averageFeedAmount    Int      @default(0) // dailyMilkAmount / feedsPerDay
+}
+
+model Feed {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  babyId    Int
+  baby      Baby     @relation(fields: [babyId], references: [id])
+  feedTime  DateTime
+  amount    Int      // in ml
+}
+
+model Poop {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  babyId      Int
+  baby        Baby     @relation(fields: [babyId], references: [id])
+  poopTime    DateTime
+  color       String
+  consistency String
+  amount      Int      // in grams
+}
