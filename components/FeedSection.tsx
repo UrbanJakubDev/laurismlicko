@@ -39,7 +39,6 @@ export function FeedSection({
       } catch (error) {
          console.error('Failed to fetch feeds:', error)
       }
-      revalidatePath(`/babies/${babyId}/statistics`)
    }
 
    // Update the feed stats when initial stats change
