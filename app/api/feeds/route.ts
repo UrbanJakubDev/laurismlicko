@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { formatInTimeZone } from "date-fns-tz"
 import { NextResponse } from "next/server"
 
 // app/api/feeds/route.ts
@@ -15,7 +16,7 @@ export async function GET(request: Request) {
   const startDate = new Date(date.setHours(0, 0, 0, 0))
   const endDate = new Date(date.setHours(23, 59, 59, 999))
 
-  const feeds = await prisma.feed.findMany({
+  const rawfeeds = await prisma.feed.findMany({
     where: {
       babyId: parseInt(babyId),
       feedTime: {
@@ -25,6 +26,12 @@ export async function GET(request: Request) {
     },
     orderBy: { feedTime: 'desc' }
   })
+
+  // Format feeds.feedTime to be in {formatInTimeZone(new Date(feed.feedTime), 'Europe/Prague', "yyyy/MM/dd HH:mm")}
+  const feeds = rawfeeds.map(feed => ({
+    ...feed,
+    feedTime: formatInTimeZone(new Date(feed.feedTime), 'Europe/Prague', "yyyy/MM/dd HH:mm")
+  }))
 
   const latestMeasurement = await prisma.babyMeasurement.findFirst({
     where: { babyId: parseInt(babyId) },

@@ -1,11 +1,13 @@
 // app/components/FeedSection/FeedSection.tsx
 'use client'
-import { useState } from 'react'
-import { format, addHours, parseISO } from 'date-fns'
+import { useEffect, useState } from 'react'
+import { format } from 'date-fns'
 import { deleteFeed } from '@/app/actions'
 import { DayPicker } from './DatePicker'
 import { DeleteButton } from './DeleteButton'
-import { formatInTimeZone } from 'date-fns-tz'
+import { revalidatePath } from 'next/cache'
+import { formatOutputTime } from '@/lib/utils'
+import StatsItem from './stats/item'
 
 type FeedStats = {
    feeds: any[]
@@ -37,11 +39,20 @@ export function FeedSection({
       } catch (error) {
          console.error('Failed to fetch feeds:', error)
       }
+      revalidatePath(`/babies/${babyId}/statistics`)
    }
+
+   // Update the feed stats when initial stats change
+   useEffect(() => {
+      setStats(initialStats)
+   }
+      , [initialStats])
+
+
 
    return (
       <div className="bg-baby-light rounded-2xl shadow-lg p-6">
-         <h2 className="text-lg font-semibold text-baby-accent mb-4">Feed History</h2>
+         <h2 className="text-lg font-semibold text-baby-accent mb-4">Historie krmení</h2>
 
          <DayPicker
             selectedDate={selectedDate}
@@ -49,35 +60,25 @@ export function FeedSection({
          />
 
          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-baby-rose/20 p-4 rounded-xl text-center">
-               <p className="text-sm text-baby-soft mb-1">Total Feeds</p>
-               <p className="text-xl font-semibold">{stats.feedCount}/8</p>
-            </div>
-            <div className="bg-baby-rose/20 p-4 rounded-xl text-center">
-               <p className="text-sm text-baby-soft mb-1">Total Amount</p>
-               <p className="text-xl font-semibold">{stats.totalMilk}ml</p>
-            </div>
+            <StatsItem label="Celkem" value={`${stats.feedCount}/8`}  />
+            <StatsItem label="Celkem vypito" value={stats.totalMilk} units='ml'/>
          </div>
 
          <div className="overflow-x-auto">
             <table className="w-full">
                <thead>
                   <tr className="border-b border-baby-pink/30">
-                     <th className="py-2 px-4 text-left text-baby-soft">Time</th>
-                     <th className="py-2 px-4 text-right text-baby-soft">Amount</th>
-                     <th className="py-2 px-4 text-right text-baby-soft">Next Feed</th>
-                     <th className="py-2 px-4 text-right text-baby-soft">Actions</th>
+                     <th className="py-2 px-4 text-left text-baby-soft">Čas</th>
+                     <th className="py-2 px-4 text-right text-baby-soft">Množství</th>
+                     <th className="py-2 px-4 text-right text-baby-soft">Příští krmení</th>
+                     <th className="py-2 px-4 text-right text-baby-soft"></th>
                   </tr>
                </thead>
                <tbody>
                   {stats.feeds.map((feed) => (
                      <tr key={feed.id} className="border-b border-baby-pink/10 hover:bg-baby-rose/30 transition-colors">
                         <td className="py-3 px-4">
-                           {new Date(feed.feedTime).toLocaleTimeString('cs-CZ', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              hour12: false
-                           })}
+                           {formatOutputTime(feed.feedTime)}
                         </td>
                         <td className="py-3 px-4 text-right">{feed.amount}ml</td>
                         <td className="py-3 px-4 text-right">
@@ -85,7 +86,8 @@ export function FeedSection({
                               .toLocaleTimeString('cs-CZ', {
                                  hour: '2-digit',
                                  minute: '2-digit',
-                                 hour12: false
+                                 hour12: false,
+                                 timeZone: 'Europe/Prague'
                               })}
                         </td>
                         <td className="py-3 px-4 text-right">

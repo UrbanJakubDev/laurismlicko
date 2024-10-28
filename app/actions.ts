@@ -1,6 +1,8 @@
 // app/actions.ts
 'use server'
 import { prisma } from '@/lib/prisma'
+import { time } from 'console'
+import { formatInTimeZone } from 'date-fns-tz'
 import { revalidatePath } from 'next/cache'
 
 const FEEDS_PER_DAY = 8
@@ -20,7 +22,7 @@ export async function createMeasurement(formData: FormData) {
   const babyId = parseInt(formData.get('babyId') as string)
   const weight = parseInt(formData.get('weight') as string) // in grams
   const height = parseFloat(formData.get('height') as string)
-  
+
   // Calculate daily milk amount based on weight
   const dailyMilkAmount = Math.round((weight / 1000) * MILK_FACTOR)
   const averageFeedAmount = Math.round(dailyMilkAmount / FEEDS_PER_DAY)
@@ -40,17 +42,17 @@ export async function createMeasurement(formData: FormData) {
 
 export async function createFeed(formData: FormData) {
   const babyId = parseInt(formData.get('babyId') as string)
-  const feedTimeStr = formData.get('feedTime') as string
+  const feedTime = new Date(formData.get('feedTime') as string)
   const amount = parseInt(formData.get('amount') as string)
 
-  // Store the time exactly as received
-  const feedTime = new Date(feedTimeStr)
+
+  
 
   await prisma.feed.create({
-    data: { 
-      babyId, 
-      feedTime,
-      amount 
+    data: {
+      babyId,
+      feedTime: feedTime.toISOString(),
+      amount
     }
   })
   revalidatePath(`/babies/${babyId}`)
@@ -60,7 +62,7 @@ export async function createFeed(formData: FormData) {
 export async function getFeedStats(babyId: number, date: Date) {
   const startOfDay = new Date(date)
   startOfDay.setHours(0, 0, 0, 0)
-  
+
   const endOfDay = new Date(date)
   endOfDay.setHours(23, 59, 59, 999)
 
@@ -119,7 +121,7 @@ export async function createPoop(formData: FormData) {
 }
 
 
- export async function deleteMeasurement(formData: FormData) {
+export async function deleteMeasurement(formData: FormData) {
   const id = parseInt(formData.get('id') as string)
   const babyId = parseInt(formData.get('babyId') as string)
   await prisma.babyMeasurement.delete({ where: { id } })

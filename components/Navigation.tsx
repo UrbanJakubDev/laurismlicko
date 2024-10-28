@@ -28,6 +28,14 @@ export function Navigation() {
           Dashboard
         </Link>
         <Link 
+          href={`/babies/${babyId}/measurements`}
+          className={`text-baby-accent hover:text-baby-soft transition-colors font-medium ${
+            pathname === `/babies/${babyId}/measurements` ? 'text-baby-soft' : ''
+          }`}
+        >
+          Měření
+        </Link>
+        <Link 
           href={`/babies/${babyId}/statistics`}
           className={`text-baby-accent hover:text-baby-soft transition-colors font-medium ${
             pathname === `/babies/${babyId}/statistics` ? 'text-baby-soft' : ''
