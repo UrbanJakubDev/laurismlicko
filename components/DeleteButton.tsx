@@ -48,9 +48,9 @@ export function DeleteButton({
   return (
     <button
       onClick={() => setShowConfirm(true)}
-      className="text-xs text-red-500 hover:text-red-600"
+      className="text-xs text-red-500 hover:text-red-600 border border-red-500 px-2 py-1 rounded-lg"
     >
-      Delete
+      X
     </button>
   )
 }

@@ -18,6 +18,7 @@ type FeedStats = {
    remainingFeeds: number
    averageAmount: number
    recommendedNextAmount: number
+   timeSinceLastFeed: string
 }
 
 export function FeedSection({
@@ -49,6 +50,7 @@ export function FeedSection({
 
 
 
+
    return (
       <div className="bg-baby-light rounded-2xl shadow-lg p-6">
          <h2 className="text-lg font-semibold text-baby-accent mb-4">Historie krmení</h2>
@@ -59,15 +61,17 @@ export function FeedSection({
          />
 
          <div className="grid grid-cols-2 gap-4 mb-6">
-            <StatsItem label="Celkem" value={`${stats.feedCount}/8`}  />
+            <StatsItem label="Poslední jídlo před" value={stats.timeSinceLastFeed} units=''/>
             <StatsItem label="Celkem vypito" value={stats.totalMilk} units='ml'/>
+            <StatsItem label="Celkem" value={`${stats.feedCount}/8`}  />
          </div>
 
          <div className="overflow-x-auto">
             <table className="w-full">
                <thead>
-                  <tr className="border-b border-baby-pink/30">
+                  <tr className="border-b border-baby-pink/30 text-xs">
                      <th className="py-2 px-4 text-left text-baby-soft">Čas</th>
+                     <th className="py-2 px-4 text-left text-baby-soft">Rozdíl</th>
                      <th className="py-2 px-4 text-right text-baby-soft">Množství</th>
                      <th className="py-2 px-4 text-right text-baby-soft">Příští krmení</th>
                      <th className="py-2 px-4 text-right text-baby-soft"></th>
@@ -84,6 +88,7 @@ export function FeedSection({
                               timeZone: 'UTC'
                            })}
                         </td>
+                        <td>{feed.timeSinceLastFeed}</td>
                         <td className="py-3 px-4 text-right">{feed.amount}ml</td>
                         <td className="py-3 px-4 text-right">
                            {new Date(new Date(feed.feedTime).getTime() + 3 * 60 * 60 * 1000)
