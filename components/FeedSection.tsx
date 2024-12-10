@@ -5,9 +5,10 @@ import { format } from 'date-fns'
 import { deleteFeed } from '@/app/actions'
 import { DayPicker } from './DatePicker'
 import { DeleteButton } from './DeleteButton'
-import { revalidatePath } from 'next/cache'
 import { formatOutputTime } from '@/lib/utils'
 import StatsItem from './stats/item'
+import { Baby } from '@/lib/types'
+import { Table } from './Table'
 
 type FeedStats = {
    feeds: any[]
@@ -23,10 +24,10 @@ type FeedStats = {
 
 export function FeedSection({
    initialStats,
-   babyId
+   baby
 }: {
    initialStats: FeedStats
-   babyId: number
+   baby: Baby
 }) {
    const [selectedDate, setSelectedDate] = useState(new Date())
    const [stats, setStats] = useState(initialStats)
@@ -34,7 +35,7 @@ export function FeedSection({
    const handleDateChange = async (date: Date) => {
       setSelectedDate(date)
       try {
-         const response = await fetch(`/api/feeds?babyId=${babyId}&date=${format(date, 'yyyy-MM-dd')}`)
+         const response = await fetch(`/api/feeds?babyId=${baby.id}&date=${format(date, 'yyyy-MM-dd')}`)
          const newStats = await response.json()
          setStats(newStats)
       } catch (error) {
@@ -49,6 +50,12 @@ export function FeedSection({
       , [initialStats])
 
 
+   // Calculate median time difference between feeds return in hours and minutes as
+   const medianTimeDifference = stats.feeds.reduce((total, feed, index) => {
+      if (index === 0) return 0
+      return total + (feed.feedTime - stats.feeds[index - 1].feedTime)
+   }, 0) / (stats.feeds.length - 1)
+
 
 
    return (
@@ -57,70 +64,65 @@ export function FeedSection({
 
          <DayPicker
             selectedDate={selectedDate}
-            onChange={handleDateChange}
+            onDateChange={handleDateChange}
          />
 
          <div className="grid grid-cols-2 gap-4 mb-6">
-            <StatsItem label="Poslední jídlo před" value={stats.timeSinceLastFeed} units=''/>
-            <StatsItem label="Celkem vypito" value={stats.totalMilk} units='ml'/>
-            <StatsItem label="Celkem" value={`${stats.feedCount}/8`}  />
+            <StatsItem label="Poslední jídlo před" value={stats.timeSinceLastFeed} units='' />
+            <StatsItem label="Celkem vypito" value={stats.totalMilk} units='ml' />
+            <StatsItem label="Celkem" value={stats.feedCount} />
+            <StatsItem
+               label="Prümerná doba mezi jídly"
+               value={formatOutputTime(medianTimeDifference)}
+               units=''
+            />
          </div>
 
-         <div className="overflow-x-auto">
-            <table className="w-full">
-               <thead>
-                  <tr className="border-b border-baby-pink/30 text-xs">
-                     <th className="py-2 px-4 text-left text-baby-soft">Čas</th>
-                     <th className="py-2 px-4 text-left text-baby-soft">Rozdíl</th>
-                     <th className="py-2 px-4 text-right text-baby-soft">Množství</th>
-                     <th className="py-2 px-4 text-right text-baby-soft">Příští krmení</th>
-                     <th className="py-2 px-4 text-right text-baby-soft"></th>
-                  </tr>
-               </thead>
-               <tbody>
-                  {stats.feeds.map((feed) => (
-                     <tr key={feed.id} className="border-b border-baby-pink/10 hover:bg-baby-rose/30 transition-colors">
-                        <td className="py-3 px-4">
-                           {new Date(feed.feedTime).toLocaleTimeString('cs-CZ', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              hour12: false,
-                              timeZone: 'UTC'
-                           })}
-                        </td>
-                        <td>{feed.timeSinceLastFeed}</td>
-                        <td className="py-3 px-4 text-right">{feed.amount}ml</td>
-                        <td className="py-3 px-4 text-right">
-                           {new Date(new Date(feed.feedTime).getTime() + 3 * 60 * 60 * 1000)
-                              .toLocaleTimeString('cs-CZ', {
-                                 hour: '2-digit',
-                                 minute: '2-digit',
-                                 hour12: false,
-                                 timeZone: 'UTC'
-                              })}
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                           <DeleteButton
-                              onDelete={deleteFeed}
-                              id={feed.id}
-                              babyId={babyId}
-                           />
-                        </td>
-                     </tr>
-                  ))}
-
-                  {
-                     stats.feeds.length === 0 && (
-                        <tr>
-                           <td colSpan={4} className="py-8 text-center text-baby-soft">
-                              No feeds recorded for this day
-                           </td>
-                        </tr>
-                     )
-                  }
-               </tbody>
-            </table>
-         </div>
+         <Table
+            data={stats.feeds}
+            columns={[
+               {
+                  header: 'Čas',
+                  accessor: (feed) => format(new Date(feed.feedTime), 'HH:mm'),
+                  align: 'left',
+                  subrow: 'top',
+                  mobileLabel: 'Čas krmení'
+               },
+               {
+                  header: 'Množství',
+                  accessor: 'amount',
+                  align: 'right',
+                  subrow: 'top',
+                  mobileLabel: 'Vypito',
+                  units: 'ml'
+               },
+               {
+                  header: 'Typ',
+                  accessor: (feed) => feed.type === 'additional' ? 'Doplňkové' : 'Hlavní',
+                  align: 'left',
+                  subrow: 'bottom',
+                  mobileLabel: 'Typ krmení'
+               },
+               {
+                  header: 'Čas mezi jídly',
+                  accessor: 'timeSinceLastFeed',
+                  align: 'right',
+                  subrow: 'bottom',
+                  mobileLabel: 'Interval'
+               },
+               {
+                  header: '',
+                  accessor: (feed) => (
+                     <DeleteButton
+                        onDelete={deleteFeed}
+                        id={feed.id}
+                        babyId={baby.id}
+                     />
+                  ),
+                  align: 'right'
+               }
+            ]}
+         />
       </div>
    )
 }

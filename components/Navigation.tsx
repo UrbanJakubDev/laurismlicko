@@ -35,14 +35,7 @@ export function Navigation() {
         >
           Měření
         </Link>
-        <Link 
-          href={`/babies/${babyId}/statistics`}
-          className={`text-baby-accent hover:text-baby-soft transition-colors font-medium ${
-            pathname === `/babies/${babyId}/statistics` ? 'text-baby-soft' : ''
-          }`}
-        >
-          Statistics
-        </Link>
+    
         <button
           onClick={logout}
           className="text-baby-accent hover:text-baby-soft transition-colors font-medium"

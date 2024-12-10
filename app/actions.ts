@@ -1,11 +1,10 @@
 // app/actions.ts
 'use server'
 import { prisma } from '@/lib/prisma'
-import { time } from 'console'
-import { formatInTimeZone } from 'date-fns-tz'
+import { Feed } from '@/lib/types'
 import { revalidatePath } from 'next/cache'
 
-const FEEDS_PER_DAY = 8
+const FEEDS_PER_DAY = 10
 const MILK_FACTOR = 170 // ml per kg
 
 
@@ -46,15 +45,14 @@ export async function createFeed(formData: FormData) {
   const babyId = parseInt(formData.get('babyId') as string)
   const feedTime = new Date(formData.get('feedTime') as string)
   const amount = parseInt(formData.get('amount') as string)
-
-
-
+  const type = formData.get('type') as string
 
   await prisma.feed.create({
     data: {
       babyId,
       feedTime: feedTime.toISOString(),
-      amount
+      amount,
+      type
     }
   })
   revalidatePath(`/babies/${babyId}`)
@@ -77,7 +75,7 @@ export async function getFeedStats(babyId: number, date: Date) {
       }
     },
     orderBy: { feedTime: 'asc' }
-  })
+  }) as Feed[]
 
   const latestMeasurement = await prisma.babyMeasurement.findFirst({
     where: { babyId },
@@ -146,7 +144,8 @@ export async function getFeedStats(babyId: number, date: Date) {
     averageAmount,
     lastFeedTime,
     timeSinceLastFeed,
-    recommendedNextAmount: remainingFeeds > 0 ? Math.round(remainingMilk / remainingFeeds) : 0
+    recommendedNextAmount: remainingFeeds > 0 ? Math.round(remainingMilk / remainingFeeds) : 0,
+    feedsPerDay: FEEDS_PER_DAY
   }
 }
 

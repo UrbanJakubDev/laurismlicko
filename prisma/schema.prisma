@@ -43,6 +43,7 @@ model Feed {
   baby      Baby     @relation(fields: [babyId], references: [id])
   feedTime  DateTime
   amount    Int      // in ml
+  type      String   @default("main") // can be "main" or "additional"
 }
 
 model Poop {

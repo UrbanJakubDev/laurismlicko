@@ -1,65 +1,53 @@
 import { getFeedStats } from "@/app/actions"
-import { prisma } from "@/lib/prisma"
-import { formatInTimeZone } from "date-fns-tz"
 import { NextResponse } from "next/server"
 
 // app/api/feeds/route.ts
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const babyId = searchParams.get('babyId')
-  const dateStr = searchParams.get('date')
+  try {
+    // Parse and validate query parameters
+    const { searchParams } = new URL(request.url)
+    const babyId = searchParams.get('babyId')
+    const dateStr = searchParams.get('date')
 
-  if (!babyId || !dateStr) {
-    return NextResponse.json({ error: 'Missing parameters' }, { status: 400 })
+    // Validate required parameters
+    if (!babyId || !dateStr) {
+      return NextResponse.json(
+        { error: 'Missing required parameters: babyId and date' }, 
+        { status: 400 }
+      )
+    }
+
+    // Validate babyId is numeric
+    const babyIdNum = parseInt(babyId)
+    if (isNaN(babyIdNum)) {
+      return NextResponse.json(
+        { error: 'babyId must be a valid number' },
+        { status: 400 }
+      )
+    }
+
+    // Validate date string
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) {
+      return NextResponse.json(
+        { error: 'Invalid date format' },
+        { status: 400 }
+      )
+    }
+
+    // Get feed stats
+    const stats = await getFeedStats(babyIdNum, date)
+
+    return NextResponse.json({
+      success: true,
+      data: stats
+    })
+
+  } catch (error) {
+    console.error('Error fetching feed stats:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
-
-  // Use server action getFeedStats
-  const stats = await getFeedStats(parseInt(babyId), new Date(dateStr))
-
-  return NextResponse.json(stats)
-
-
-  // const date = new Date(dateStr)
-  // const startDate = new Date(date.setHours(0, 0, 0, 0))
-  // const endDate = new Date(date.setHours(23, 59, 59, 999))
-
-  // const rawfeeds = await prisma.feed.findMany({
-  //   where: {
-  //     babyId: parseInt(babyId),
-  //     feedTime: {
-  //       gte: startDate,
-  //       lte: endDate
-  //     }
-  //   },
-  //   orderBy: { feedTime: 'desc' }
-  // })
-
-  // // Format feeds.feedTime to be in {formatInTimeZone(new Date(feed.feedTime), 'Europe/Prague', "yyyy/MM/dd HH:mm")}
-  // const feeds = rawfeeds.map(feed => ({
-  //   ...feed,
-  //   feedTime: formatInTimeZone(new Date(feed.feedTime), 'Europe/Prague', "yyyy/MM/dd HH:mm")
-  // }))
-
-  // const latestMeasurement = await prisma.babyMeasurement.findFirst({
-  //   where: { babyId: parseInt(babyId) },
-  //   orderBy: { createdAt: 'desc' }
-  // })
-
-  // const totalMilk = feeds.reduce((sum, feed) => sum + feed.amount, 0)
-  // const feedCount = feeds.length
-  // const targetMilk = latestMeasurement?.dailyMilkAmount ?? 0
-  // const remainingMilk = targetMilk - totalMilk
-  // const remainingFeeds = 8 - feedCount
-  // const averageAmount = feedCount > 0 ? Math.round(totalMilk / feedCount) : 0
-
-  // return NextResponse.json({
-  //   feeds,
-  //   totalMilk,
-  //   feedCount,
-  //   targetMilk,
-  //   remainingMilk,
-  //   remainingFeeds,
-  //   averageAmount,
-  //   recommendedNextAmount: remainingFeeds > 0 ? Math.round(remainingMilk / remainingFeeds) : 0
-  // })
 }

@@ -1,9 +1,8 @@
-import { createMeasurement, deleteMeasurement, getFeedStats } from '@/app/actions'
-import { DeleteButton } from '@/components/DeleteButton'
+import { createMeasurement } from '@/app/actions'
 import { SubmitButton } from '@/components/SubmitButton'
 import { prisma } from '@/lib/prisma'
 import { format } from 'date-fns'
-import React from 'react'
+import { Table } from '@/components/Table'
 
 export default async function MeasurementsPage({
    params,
@@ -13,7 +12,6 @@ export default async function MeasurementsPage({
    const { id } = await params
    const babyId = parseInt(id)
    const today = new Date()
-   const stats = await getFeedStats(babyId, today)
 
    const baby = await prisma.baby.findUnique({
       where: { id: babyId },
@@ -24,6 +22,15 @@ export default async function MeasurementsPage({
          }
       }
    })
+
+
+   const allMeasurements = await prisma.babyMeasurement.findMany({
+      where: { babyId },
+      orderBy: { createdAt: 'desc' }
+   })
+
+
+
 
    if (!baby) return <div>Baby not found</div>
 
@@ -96,46 +103,40 @@ export default async function MeasurementsPage({
             </form>
          </div>
 
-         {/* Measurements Statistics */}
-         <div className="bg-baby-light rounded-2xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-baby-accent mb-4">Statistika jak roste</h2>
-            <div className="overflow-x-auto">
-               <table className="w-full">
-                  <thead>
-                     <tr className="border-b border-baby-pink/30">
-                        <th className="py-2 px-4 text-left text-baby-soft">Datum</th>
-                        <th className="py-2 px-4 text-right text-baby-soft">Váha (g)</th>
-                        <th className="py-2 px-4 text-right text-baby-soft">Délka (cm)</th>
-                        <th className="py-2 px-4 text-right text-baby-soft">Mléko denně (ml)</th>
-                     </tr>
-                  </thead>
-                  <tbody>
-                     {baby.measurements.map((measurement) => (
-                        <tr key={measurement.id} className="border-b border-baby-pink/10 hover:bg-baby-rose/30 transition-colors">
-                           <td className="py-2 px-4">{format(measurement.createdAt, 'MMM d, yyyy')}</td>
-                           <td className="py-2 px-4 text-right">{measurement.weight}</td>
-                           <td className="py-2 px-4 text-right">{measurement.height}</td>
-                           <td className="py-2 px-4 text-right">{measurement.dailyMilkAmount}</td>
-                           <td className="py-2 px-4 text-right">
-                              <DeleteButton
-                                 onDelete={deleteMeasurement}
-                                 id={measurement.id}
-                                 babyId={baby.id}
-                              />
-                           </td>
-                        </tr>
-                     ))}
-                  </tbody>
+         {/* Measurements Table */}
+         <div className="mt-8">
+            <Table
+               data={allMeasurements}
+               columns={[
+                  {
+                     header: 'Datum',
+                     accessor: (measurement) => format(measurement.createdAt, 'dd.MM.yyyy'),
+                     align: 'left'
+                  },
+                  {
+                     header: 'Váha',
+                     accessor: 'weight',
+                     align: 'right'
+                  },
+                  {
+                     header: 'Výška',
+                     accessor: 'height',
+                     align: 'right'
+                  },
+                  {
+                     header: 'Denní příjem',
+                     accessor: 'dailyMilkAmount',
+                     align: 'right'
+                  }
+               ]}
+            />
+         </div>
 
-               </table>
-            </div>
-
-            {/* Growth Charts would go here */}
-            <div className="mt-4 p-4 bg-baby-rose/20 rounded-xl">
-               <p className="text-sm text-baby-soft text-center">
-                  Growth tracking visualizations coming soon! 📈
-               </p>
-            </div>
+         {/* Growth Charts would go here */}
+         <div className="mt-4 p-4 bg-baby-rose/20 rounded-xl">
+            <p className="text-sm text-baby-soft text-center">
+               Growth tracking visualizations coming soon! 📈
+            </p>
          </div>
       </div>
    )

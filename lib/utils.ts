@@ -5,6 +5,4 @@ export function formatOutputTime(time: Date) {
       hour12: false,
       timeZone: 'UTC'
    })
-
-
 }
