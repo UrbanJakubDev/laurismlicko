@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { Feed } from '@/lib/types'
 import { revalidatePath } from 'next/cache'
+import { startOfDay, endOfDay } from 'date-fns';
 
 const FEEDS_PER_DAY = 10
 const MILK_FACTOR = 170 // ml per kg
@@ -84,93 +85,74 @@ export async function createFeed({
 }
 
 // Helper function to get feed statistics
-export async function getFeedStats(
-  babyId: number, 
-  date: Date
-) {
-  const startOfDay = new Date(date)
-  startOfDay.setHours(0, 0, 0, 0)
-
-  const endOfDay = new Date(date)
-  endOfDay.setHours(23, 59, 59, 999)
+export async function getFeedStats(babyId: number, date: Date) {
+  // Create start and end of day in the same timezone as stored in DB (GMT+0100)
+  const start = startOfDay(date);
+  const end = endOfDay(date);
+  
+  // Adjust for timezone offset
+  start.setHours(start.getHours() + 1);
+  end.setHours(end.getHours() + 1);
 
   const feeds = await prisma.feed.findMany({
     where: {
       babyId,
       feedTime: {
-        gte: startOfDay,
-        lte: endOfDay
+        gte: start,
+        lt: end
       }
     },
-    orderBy: { feedTime: 'asc' }
-  }) as Feed[]
+    orderBy: { feedTime: 'asc' },
+  }) as Feed[];
 
+  console.log(feeds)
+
+  // ... rest of the function remains unchanged
 
   const latestMeasurement = await prisma.babyMeasurement.findFirst({
     where: { babyId },
-    orderBy: { createdAt: 'desc' }
-  })
+    orderBy: { createdAt: 'desc' },
+  });
 
-  // Helper function to format minutes to HH:mm
-  const formatTimeInterval = (minutes: number): string => {
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`
-  }
+  const formatTimeInterval = (minutes: number) => {
+    const hours = String(Math.floor(minutes / 60)).padStart(2, '0');
+    const mins = String(minutes % 60).padStart(2, '0');
+    return `${hours}:${mins}`;
+  };
 
-  // Helper function to get current time with timezone correction
-  const getCurrentTime = (): Date => {
-    const now = new Date()
-    // Add one hour to correct for timezone difference
-    now.setHours(now.getHours() + 1)
-    return now
-  }
+  const getCurrentTime = () => {
+    const now = new Date();
+    now.setHours(now.getHours() + 1); // Adjust for timezone
+    return now;
+  };
 
-  // Helper function to calculate time difference
-  const getTimeDifferenceInMinutes = (laterDate: Date, earlierDate: Date): number => {
-    return Math.round((laterDate.getTime() - earlierDate.getTime()) / (1000 * 60))
-  }
+  const getTimeDifferenceInMinutes = (laterDate: Date, earlierDate: Date) =>
+    Math.round((laterDate.getTime() - earlierDate.getTime()) / (1000 * 60));
 
-  // Add time differences between feeds
   const feedsWithTimeDiff = feeds.map((feed, index) => {
-    let timeDiffString = null
-    if (index > 0) {
-      const currentFeedTime = new Date(feed.feedTime)
-      const previousFeedTime = new Date(feeds[index - 1].feedTime)
-      const diffMinutes = getTimeDifferenceInMinutes(currentFeedTime, previousFeedTime)
-      timeDiffString = formatTimeInterval(diffMinutes)
-    }
+    const timeDiffString = index > 0 
+      ? formatTimeInterval(getTimeDifferenceInMinutes(new Date(feed.feedTime), new Date(feeds[index - 1].feedTime)))
+      : null;
+
     return {
       ...feed,
       timeSinceLastFeed: timeDiffString,
-      type: feed.type
-    }
-  })
+    };
+  });
 
-  const totalMilk = feeds.reduce((sum, feed) => sum + feed.amount, 0)
-  const feedCount = feeds.length
-  const targetMilk = latestMeasurement?.dailyMilkAmount ?? 0
-  const remainingMilk = targetMilk - totalMilk
-  const remainingFeeds = FEEDS_PER_DAY - feedCount
-  const averageAmount = feedCount > 0 ? Math.round(totalMilk / feedCount) : 0
+  const totalMilk = feeds.reduce((sum, feed) => sum + feed.amount, 0);
+  const feedCount = feeds.length;
+  const targetMilk = latestMeasurement?.dailyMilkAmount ?? 0;
+  const remainingMilk = targetMilk - totalMilk;
+  const remainingFeeds = FEEDS_PER_DAY - feedCount;
+  const averageAmount = feedCount > 0 ? Math.round(totalMilk / feedCount) : 0;
 
-  // Calculate time since last feed with timezone correction
+  const lastFeed = feeds.filter(feed => feed.type === 'main').pop();
+  const lastFeedTime = lastFeed ? lastFeed.feedTime : null;
 
-  // Get the time of the last feed but only feeds whith type "main" are counted
-
-  const mainFeeds = feeds.filter(feed => feed.type === 'main')
-  const lastFeed = mainFeeds[mainFeeds.length - 1]
-  console.log(lastFeed)
-  const lastFeedTime = lastFeed ? lastFeed.feedTime : null
-
-
-  let timeSinceLastFeed = null
-  if (lastFeedTime) {
-    const now = getCurrentTime() // Get current time with timezone correction
-    const lastFeedDate = new Date(lastFeedTime)
-    const diffMinutes = getTimeDifferenceInMinutes(now, lastFeedDate)
-    timeSinceLastFeed = formatTimeInterval(diffMinutes)
-  }
+  const timeSinceLastFeed = lastFeedTime 
+    ? formatTimeInterval(getTimeDifferenceInMinutes(getCurrentTime(), new Date(lastFeedTime))) 
+    : null;
 
   return {
     feeds: feedsWithTimeDiff,
@@ -183,8 +165,8 @@ export async function getFeedStats(
     lastFeedTime,
     timeSinceLastFeed,
     recommendedNextAmount: remainingFeeds > 0 ? Math.round(remainingMilk / remainingFeeds) : 0,
-    feedsPerDay: FEEDS_PER_DAY
-  }
+    feedsPerDay: FEEDS_PER_DAY,
+  };
 }
 
 export async function createPoop(formData: FormData) {

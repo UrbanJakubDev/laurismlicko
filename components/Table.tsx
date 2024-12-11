@@ -98,7 +98,7 @@ export function Table<T>({ data, columns, onRowClick }: TableProps<T>) {
                       {column.mobileLabel}
                     </span>
                   )}
-                  <span className="text-baby-soft">
+                  <span className="text-black/60">
                     {renderValue(item, column)}
                   </span>
                 </div>
@@ -118,7 +118,7 @@ export function Table<T>({ data, columns, onRowClick }: TableProps<T>) {
                       {column.mobileLabel}
                     </span>
                   )}
-                  <span className="text-baby-soft text-sm">
+                  <span className="text-black/60 text-sm">
                     {renderValue(item, column)}
                   </span>
                 </div>
