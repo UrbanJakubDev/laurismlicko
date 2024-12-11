@@ -83,7 +83,7 @@ export function FeedSection({
             columns={[
                {
                   header: 'Čas',
-                  accessor: (feed) => format(new Date(feed.feedTime), 'HH:mm'),
+                  accessor: (feed) => formatOutputTime(feed.feedTime),
                   align: 'left',
                   subrow: 'top',
                   mobileLabel: 'Čas krmení'

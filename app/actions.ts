@@ -19,6 +19,7 @@ export async function createBaby(formData: FormData) {
   revalidatePath('/babies')
 }
 
+
 export async function createMeasurement(formData: FormData) {
   const babyId = parseInt(formData.get('babyId') as string)
   const weight = parseInt(formData.get('weight') as string) // in grams
@@ -41,15 +42,39 @@ export async function createMeasurement(formData: FormData) {
   revalidatePath(`/babies/${babyId}`)
 }
 
-export async function createFeed(formData: FormData) {
-  const babyId = parseInt(formData.get('babyId') as string)
-  const feedTime = new Date(formData.get('feedTime') as string)
-  const amount = parseInt(formData.get('amount') as string)
-  const type = formData.get('type') as string
+/**
+ * Create a new feed entry.
+ *
+ * @param {Object} opts
+ * @prop {string} babyId - the ID of the baby
+ * @prop {string} feedTime - the time of the feed in ISO string format
+ * @prop {string} amount - the amount of milk in ml
+ * @prop {string} type - either 'main' or 'additional'
+ *
+ * @throws {Error} if any of the input values are invalid
+ */
+export async function createFeed({
+  babyId,
+  feedTime: feedTimeStr,
+  amount: amountStr,
+  type
+}: {
+  babyId: string
+  feedTime: string
+  amount: string
+  type: Feed['type']
+}) {
+  const babyIdNum = parseInt(babyId, 10)
+  const feedTime = new Date(feedTimeStr)
+  const amount = parseInt(amountStr, 10)
+
+  if (isNaN(babyIdNum) || isNaN(amount) || isNaN(feedTime.getTime())) {
+    throw new Error('Invalid input')
+  }
 
   await prisma.feed.create({
     data: {
-      babyId,
+      babyId: babyIdNum,
       feedTime: feedTime.toISOString(),
       amount,
       type
@@ -59,7 +84,10 @@ export async function createFeed(formData: FormData) {
 }
 
 // Helper function to get feed statistics
-export async function getFeedStats(babyId: number, date: Date) {
+export async function getFeedStats(
+  babyId: number, 
+  date: Date
+) {
   const startOfDay = new Date(date)
   startOfDay.setHours(0, 0, 0, 0)
 
@@ -76,6 +104,7 @@ export async function getFeedStats(babyId: number, date: Date) {
     },
     orderBy: { feedTime: 'asc' }
   }) as Feed[]
+
 
   const latestMeasurement = await prisma.babyMeasurement.findFirst({
     where: { babyId },
@@ -113,7 +142,8 @@ export async function getFeedStats(babyId: number, date: Date) {
     }
     return {
       ...feed,
-      timeSinceLastFeed: timeDiffString
+      timeSinceLastFeed: timeDiffString,
+      type: feed.type
     }
   })
 
@@ -125,7 +155,15 @@ export async function getFeedStats(babyId: number, date: Date) {
   const averageAmount = feedCount > 0 ? Math.round(totalMilk / feedCount) : 0
 
   // Calculate time since last feed with timezone correction
-  const lastFeedTime = feeds[feeds.length - 1]?.feedTime
+
+  // Get the time of the last feed but only feeds whith type "main" are counted
+
+  const mainFeeds = feeds.filter(feed => feed.type === 'main')
+  const lastFeed = mainFeeds[mainFeeds.length - 1]
+  console.log(lastFeed)
+  const lastFeedTime = lastFeed ? lastFeed.feedTime : null
+
+
   let timeSinceLastFeed = null
   if (lastFeedTime) {
     const now = getCurrentTime() // Get current time with timezone correction
