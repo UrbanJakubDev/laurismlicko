@@ -54,20 +54,15 @@ export async function createMeasurement(formData: FormData) {
  *
  * @throws {Error} if any of the input values are invalid
  */
-export async function createFeed({
-  babyId,
-  feedTime: feedTimeStr,
-  amount: amountStr,
-  type
-}: {
-  babyId: string
-  feedTime: string
-  amount: string
-  type: Feed['type']
-}) {
-  const babyIdNum = parseInt(babyId, 10)
+export async function createFeed(formData: FormData) {
+  const babyIdNum = parseInt(formData.get('babyId') as string)
+  const feedTimeStr = formData.get('feedTime') as string
+  const amountStr = formData.get('amount') as string
   const feedTime = new Date(feedTimeStr)
   const amount = parseInt(amountStr, 10)
+  const type = formData.get('type') as Feed['type']
+
+  console.log(babyIdNum, feedTime, amount, type)
 
   if (isNaN(babyIdNum) || isNaN(amount) || isNaN(feedTime.getTime())) {
     throw new Error('Invalid input')
@@ -81,7 +76,7 @@ export async function createFeed({
       type
     }
   })
-  revalidatePath(`/babies/${babyId}`)
+  revalidatePath(`/babies/${babyIdNum}`)
 }
 
 // Helper function to get feed statistics

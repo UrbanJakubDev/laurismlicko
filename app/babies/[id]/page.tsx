@@ -17,7 +17,9 @@ export default async function BabyPage({
 }) {
    const { id } = await params
    const babyId = parseInt(id)
-   const today = new Date()
+
+
+   const today = new Date(Date.now() - (new Date().getTimezoneOffset() * 60 * 1000));
    const stats = await getFeedStats(babyId, today)
 
    const baby = await prisma.baby.findUniqueOrThrow({
