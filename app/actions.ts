@@ -100,7 +100,7 @@ export async function getFeedStats(babyId: number, date: Date) {
     orderBy: { feedTime: 'asc' },
   }) as Feed[];
 
-  console.log(feeds)
+  
 
   // ... rest of the function remains unchanged
 

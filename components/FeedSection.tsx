@@ -56,6 +56,10 @@ export function FeedSection({
       return total + (feed.feedTime - stats.feeds[index - 1].feedTime)
    }, 0) / (stats.feeds.length - 1)
 
+   // Stats sort by created_at by desc
+   const sorted_stats = [...stats.feeds].sort((a, b) => 
+     new Date(b.feedTime).getTime() - new Date(a.feedTime).getTime()
+   )
 
 
    return (
@@ -79,7 +83,7 @@ export function FeedSection({
          </div>
 
          <Table
-            data={stats.feeds}
+            data={sorted_stats}
             columns={[
                {
                   header: 'Čas',
