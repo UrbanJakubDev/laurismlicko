@@ -2,17 +2,14 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { format } from 'date-fns'
-import { deleteFeed } from '@/app/actions'
 import { DayPicker } from './DatePicker'
-import { DeleteButton } from './DeleteButton'
 import { formatOutputTime } from '@/lib/utils'
 import StatsItem from './stats/item'
-import { Baby } from '@/lib/types'
-import { Table } from './Table'
+import { Baby, Feed } from '@/lib/types'
 import FeedList from './feed/feedList'
 
 type FeedStats = {
-   feeds: any[]
+   feeds: Feed[]
    totalMilk: number
    feedCount: number
    targetMilk: number
@@ -88,7 +85,7 @@ export function FeedSection({
             />
          </div>
 
-         <FeedList feeds={stats.feeds}  />
+         <FeedList feeds={sorted_stats}  />
       </div>
    )
 }

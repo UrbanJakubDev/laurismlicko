@@ -1,7 +1,6 @@
 import { createMeasurement } from '@/app/actions'
 import { SubmitButton } from '@/components/SubmitButton'
 import { prisma } from '@/lib/prisma'
-import { format } from 'date-fns'
 import { Table } from '@/components/Table'
 
 export default async function MeasurementsPage({
@@ -11,7 +10,6 @@ export default async function MeasurementsPage({
 }) {
    const { id } = await params
    const babyId = parseInt(id)
-   const today = new Date()
 
    
 
@@ -37,7 +35,6 @@ export default async function MeasurementsPage({
    if (!baby) return <div>Baby not found</div>
 
    const latestMeasurement = baby.measurements[0]
-   const headerDateAccessor = format(latestMeasurement.createdAt, 'dd.MM.yyyy')
 
    return (
       <div className="max-w-md mx-auto p-4 pb-20 space-y-6">

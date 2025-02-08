@@ -1,4 +1,3 @@
-import { deleteFeed } from '@/app/actions';
 import { useState } from 'react';
 // Define the props for the FeedItem component
 interface FeedItemProps {

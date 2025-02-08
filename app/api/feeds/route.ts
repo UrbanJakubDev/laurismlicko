@@ -1,5 +1,4 @@
-import { deleteFeed, getFeedStats } from "@/app/actions"
-import { prisma } from "@/lib/prisma"
+import { getFeedStats } from "@/app/actions"
 import { NextResponse } from "next/server"
 
 // app/api/feeds/route.ts

@@ -47,7 +47,6 @@ export default async function BabyPage({
 
    if (!baby) return <div>Baby not found</div>
 
-   const latestMeasurement = baby.measurements[0]
 
    // Get average feed amount for the all days in db
    const allMeasurements = await prisma.feed.findMany({
