@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Feed" ADD COLUMN     "foodId" INTEGER NOT NULL DEFAULT 4;
+
+-- AddForeignKey
+ALTER TABLE "Feed" ADD CONSTRAINT "Feed_foodId_fkey" FOREIGN KEY ("foodId") REFERENCES "Food"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

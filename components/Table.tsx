@@ -1,3 +1,4 @@
+'use client'
 import { ReactNode } from 'react'
 
 type Column<T> = {
@@ -23,7 +24,24 @@ export function Table<T>({ data, columns, onRowClick }: TableProps<T>) {
     const value = typeof column.accessor === 'function'
       ? column.accessor(item)
       : (item[column.accessor] as ReactNode)
-    
+
+    // Check if the value is a Date object
+    if (value instanceof Date) {
+      // Format the date as desired
+      const formattedDate = value.toLocaleDateString('cs-CZ', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+
+      return (
+        <>
+          {formattedDate}
+          {column.units && <span className="ml-1 text-baby-soft/70">{column.units}</span>}
+        </>
+      )
+    }
+
     return (
       <>
         {value}

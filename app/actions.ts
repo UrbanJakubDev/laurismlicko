@@ -61,6 +61,7 @@ export async function createFeed(formData: FormData) {
   const feedTime = new Date(feedTimeStr)
   const amount = parseInt(amountStr, 10)
   const type = formData.get('type') as Feed['type']
+  const foodId = parseInt(formData.get('foodId') as string)
 
   console.log(babyIdNum, feedTime, amount, type)
 
@@ -73,7 +74,8 @@ export async function createFeed(formData: FormData) {
       babyId: babyIdNum,
       feedTime: feedTime.toISOString(),
       amount,
-      type
+      type,
+      foodId
     }
   })
   revalidatePath(`/babies/${babyIdNum}`)
@@ -98,11 +100,21 @@ export async function getFeedStats(babyId: number, date: Date) {
       }
     },
     orderBy: { feedTime: 'asc' },
-  }) as Feed[];
-
-  
-
-  // ... rest of the function remains unchanged
+    include: {
+      food: {
+        select: {
+          name: true,
+          emoji: true,
+          unit: {
+            select: {
+              name: true,
+              emoji: true
+            }
+          }
+        }
+      }
+    }
+  });
 
   const latestMeasurement = await prisma.babyMeasurement.findFirst({
     where: { babyId },
@@ -204,3 +216,51 @@ export async function deletePoop(formData: FormData) {
   await prisma.poop.delete({ where: { id } })
   revalidatePath(`/babies/${babyId}`)
 }
+
+export async function createFood(formData: FormData) {
+  const name = formData.get('name') as string
+
+  await prisma.food.create({
+    data: { name }
+  })
+  revalidatePath('/foods')
+}
+
+export async function createUnit(formData: FormData) {
+  const name = formData.get('name') as string
+  const emoji = formData.get('emoji') as string
+
+  await prisma.unit.create({
+    data: { name, emoji }
+  })
+  revalidatePath('/units')
+}
+
+export async function updateFood(formData: FormData) {
+
+  console.log('Updating food')
+  console.log(formData)
+  const idStr = formData.get('id') as string;
+  const id = parseInt(idStr, 10);
+  const name = formData.get('name') as string;
+  const emoji = formData.get('emoji') as string;
+  const unitIdStr = formData.get('unitId') as string;
+  const unitId = parseInt(unitIdStr, 10);
+
+  console.log('ID:', idStr, 'Parsed ID:', id);
+  console.log('Unit ID:', unitIdStr, 'Parsed Unit ID:', unitId);
+
+  if (isNaN(id) || isNaN(unitId)) {
+    throw new Error('Invalid input: ID and Unit ID must be numbers');
+  }
+
+  await prisma.food.update({
+    where: { id },
+    data: { name, emoji, unitId }
+  });
+  revalidatePath(`/foods/${id}`);
+} 
+
+
+
+  

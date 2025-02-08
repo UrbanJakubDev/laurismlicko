@@ -9,6 +9,7 @@ import { formatOutputTime } from '@/lib/utils'
 import StatsItem from './stats/item'
 import { Baby } from '@/lib/types'
 import { Table } from './Table'
+import FeedList from './feed/feedList'
 
 type FeedStats = {
    feeds: any[]
@@ -19,7 +20,7 @@ type FeedStats = {
    remainingFeeds: number
    averageAmount: number
    recommendedNextAmount: number
-   timeSinceLastFeed: string
+   timeSinceLastFeed: string | null
 }
 
 export function FeedSection({
@@ -30,14 +31,18 @@ export function FeedSection({
    baby: Baby
 }) {
    const [selectedDate, setSelectedDate] = useState(new Date())
-   const [stats, setStats] = useState(initialStats)
+   const [stats, setStats] = useState<FeedStats>({ ...initialStats, feeds: initialStats.feeds || [] })
 
    const handleDateChange = async (date: Date) => {
       setSelectedDate(date)
       try {
          const response = await fetch(`/api/feeds?babyId=${baby.id}&date=${format(date, 'yyyy-MM-dd')}`)
-         const newStats = await response.json()
-         setStats(newStats)
+         const result = await response.json()
+         if (result.success) {
+            setStats({ ...result.data, feeds: result.data.feeds || [] })
+         } else {
+            console.error('Failed to fetch feeds:', result)
+         }
       } catch (error) {
          console.error('Failed to fetch feeds:', error)
       }
@@ -51,10 +56,11 @@ export function FeedSection({
 
 
    // Calculate median time difference between feeds return in hours and minutes as
-   const medianTimeDifference = stats.feeds.reduce((total, feed, index) => {
-      if (index === 0) return 0
-      return total + (feed.feedTime - stats.feeds[index - 1].feedTime)
-   }, 0) / (stats.feeds.length - 1)
+   const medianTimeDifference = (stats.feeds && stats.feeds.length > 1) ?
+     stats.feeds.reduce((total, feed, index) => {
+       if (index === 0) return 0
+       return total + (feed.feedTime - stats.feeds[index - 1].feedTime)
+     }, 0) / (stats.feeds.length - 1) : 0
 
    // Stats sort by created_at by desc
    const sorted_stats = [...stats.feeds].sort((a, b) => 
@@ -68,65 +74,21 @@ export function FeedSection({
 
          <DayPicker
             selectedDate={selectedDate}
-            onDateChange={handleDateChange}
+            onChange={handleDateChange}
          />
 
          <div className="grid grid-cols-2 gap-4 mb-6">
-            <StatsItem label="Poslední jídlo před" value={stats.timeSinceLastFeed} units='' />
+            <StatsItem label="Poslední jídlo před" value={stats.timeSinceLastFeed || 'N/A'} units='' />
             <StatsItem label="Celkem vypito" value={stats.totalMilk} units='ml' />
             <StatsItem label="Celkem" value={stats.feedCount} />
             <StatsItem
                label="Prümerná doba mezi jídly"
-               value={formatOutputTime(medianTimeDifference)}
+               value={formatOutputTime(new Date(medianTimeDifference))}
                units=''
             />
          </div>
 
-         <Table
-            data={sorted_stats}
-            columns={[
-               {
-                  header: 'Čas',
-                  accessor: (feed) => formatOutputTime(feed.feedTime),
-                  align: 'left',
-                  subrow: 'top',
-                  mobileLabel: 'Čas krmení'
-               },
-               {
-                  header: 'Množství',
-                  accessor: 'amount',
-                  align: 'right',
-                  subrow: 'top',
-                  mobileLabel: 'Vypito',
-                  units: 'ml'
-               },
-               {
-                  header: 'Typ',
-                  accessor: (feed) => feed.type === 'additional' ? 'Doplňkové' : 'Hlavní',
-                  align: 'left',
-                  subrow: 'bottom',
-                  mobileLabel: 'Typ krmení'
-               },
-               {
-                  header: 'Čas mezi jídly',
-                  accessor: 'timeSinceLastFeed',
-                  align: 'right',
-                  subrow: 'bottom',
-                  mobileLabel: 'Interval'
-               },
-               {
-                  header: '',
-                  accessor: (feed) => (
-                     <DeleteButton
-                        onDelete={deleteFeed}
-                        id={feed.id}
-                        babyId={baby.id}
-                     />
-                  ),
-                  align: 'right'
-               }
-            ]}
-         />
+         <FeedList feeds={stats.feeds}  />
       </div>
    )
 }

@@ -13,6 +13,8 @@ export default async function MeasurementsPage({
    const babyId = parseInt(id)
    const today = new Date()
 
+   
+
    const baby = await prisma.baby.findUnique({
       where: { id: babyId },
       include: {
@@ -35,6 +37,7 @@ export default async function MeasurementsPage({
    if (!baby) return <div>Baby not found</div>
 
    const latestMeasurement = baby.measurements[0]
+   const headerDateAccessor = format(latestMeasurement.createdAt, 'dd.MM.yyyy')
 
    return (
       <div className="max-w-md mx-auto p-4 pb-20 space-y-6">
@@ -57,7 +60,7 @@ export default async function MeasurementsPage({
                   </div>
                   <div className="bg-baby-rose/20 p-4 rounded-xl text-center">
                      <p className="text-sm text-baby-soft mb-1">Denní cíl mléka</p>
-                     <p className="text-xl font-semibold">{latestMeasurement.dailyMilkAmount}ml</p>
+                     <p className="text-xl font-semibold">{latestMeasurement.dailyMilkAmount}ml ({latestMeasurement.dailyMilkAmount / 10}ml)</p>
                   </div>
                   <div className="bg-baby-rose/20 p-4 rounded-xl text-center">
                      <p className="text-sm text-baby-soft mb-1">Množství na dávku</p>
@@ -110,7 +113,7 @@ export default async function MeasurementsPage({
                columns={[
                   {
                      header: 'Datum',
-                     accessor: (measurement) => format(measurement.createdAt, 'dd.MM.yyyy'),
+                     accessor: "createdAt",
                      align: 'left'
                   },
                   {

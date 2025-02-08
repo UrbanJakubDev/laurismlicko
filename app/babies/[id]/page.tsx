@@ -1,4 +1,3 @@
-
 // app/babies/[id]/page.tsx
 import { prisma } from '@/lib/prisma'
 import { createFeed, getFeedStats } from '@/app/actions'
@@ -8,8 +7,6 @@ import { formatInTimeZone } from 'date-fns-tz'
 import StatsItem from '@/components/stats/item'
 import { Baby, Feed } from '@/lib/types'
 
-
-
 export default async function BabyPage({
    params,
 }: {
@@ -18,24 +15,39 @@ export default async function BabyPage({
    const { id } = await params
    const babyId = parseInt(id)
 
+   if (isNaN(babyId)) {
+      return <div>Invalid baby ID</div>
+   }
 
    const today = new Date(Date.now() - (new Date().getTimezoneOffset() * 60 * 1000));
    const stats = await getFeedStats(babyId, today)
 
-   const baby = await prisma.baby.findUniqueOrThrow({
+   const baby = await prisma.baby.findUnique({
       where: { id: babyId },
       include: {
          measurements: {
             orderBy: { createdAt: 'desc' },
             take: 1,
+            include: {
+               baby: true
+            }
+         },
+         feeds: {
+            include: {
+               baby: true
+            }
+         },
+         poops: {
+            include: {
+               baby: true
+            }
          }
       }
-   }).catch(() => null) as Baby
+   }) as Baby | null
 
    if (!baby) return <div>Baby not found</div>
 
    const latestMeasurement = baby.measurements[0]
-
 
    // Get average feed amount for the all days in db
    const allMeasurements = await prisma.feed.findMany({
@@ -49,6 +61,7 @@ export default async function BabyPage({
       return Math.round(feeds.length / uniqueDays.size)
    }
 
+   const foods = await prisma.food.findMany()
 
    return (
       <div className="max-w-md mx-auto p-4 pb-20 space-y-6">
@@ -62,8 +75,8 @@ export default async function BabyPage({
          <div className="bg-baby-light rounded-2xl shadow-lg p-6">
             <h2 className="text-lg font-semibold text-baby-accent mb-4">Dnešní přehled</h2>
             <div className="grid grid-cols-2 gap-4">
-               <StatsItem label="Váha" value={latestMeasurement.weight} units='g' />
-               <StatsItem label="Délka" value={latestMeasurement.height} units='cm' />
+               {/* <StatsItem label="Váha" value={latestMeasurement.weight} units='g' />
+               <StatsItem label="Délka" value={latestMeasurement.height} units='cm' /> */}
                <StatsItem label="Mlíčko Celkem" value={stats.totalMilk} units='ml' />
                <StatsItem label="Zbývá vypít" value={stats.remainingMilk} units='ml' />
                <StatsItem label="Krmení" value={`${stats.feedCount} / ${calculateAverageFeeds(allMeasurements)}`} />
@@ -108,19 +121,31 @@ export default async function BabyPage({
                      defaultValue={stats.averageAmount >= stats.remainingMilk ? stats.remainingMilk : stats.averageAmount}
                      className="w-full p-3 border border-baby-pink/20 rounded-xl bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
                   />
-               <div className="space-y-2">
-                  <label className="block text-sm text-baby-soft">Typ krmení</label>
-                  <select
-                     name="type"
-                     required
-                     defaultValue="main"
-                     className="w-full p-3 border border-baby-pink/20 rounded-xl bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
-                  >
-                     <option value="main">Hlavní</option>
-                     <option value="additional">Doplňkové</option>
-                  </select>
-               </div>
+                  <div className="space-y-2">
+                     <label className="block text-sm text-baby-soft">Typ krmení</label>
+                     <select
+                        name="type"
+                        required
+                        defaultValue="main"
+                        className="w-full p-3 border border-baby-pink/20 rounded-xl bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
+                     >
+                        <option value="main">Hlavní</option>
+                        <option value="additional">Doplňkové</option>
+                     </select>
+                  </div>
 
+                  <div className="space-y-2">
+                     <label className="block text-sm text-baby-soft">Jídlo</label>
+                     <select
+                        name="foodId"
+                        required
+                        className="w-full p-3 border border-baby-pink/20 rounded-xl bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
+                     >
+                        {foods.map(food => (
+                           <option key={food.id} value={food.id}>{food.name}</option>
+                        ))}
+                     </select>
+                  </div>
                </div>
                <SubmitButton>
                   Přidat krmení

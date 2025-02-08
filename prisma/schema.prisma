@@ -44,6 +44,8 @@ model Feed {
   feedTime  DateTime
   amount    Int      // in ml
   type      String   @default("main") // can be "main" or "additional"
+  foodId    Int      @default(4)
+  food      Food     @relation(fields: [foodId], references: [id])
 }
 
 model Poop {
@@ -57,3 +59,25 @@ model Poop {
   consistency String
   amount      Int      // in grams
 }
+
+
+model Food {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  unit      Unit?    @relation(fields: [unitId], references: [id])
+  unitId    Int?
+  emoji     String?  @default("🍼")
+  feeds     Feed[]
+}
+
+model Unit {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  emoji     String?  @default("💧")
+  foods     Food[]
+}
+
