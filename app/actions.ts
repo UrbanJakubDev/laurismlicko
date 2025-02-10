@@ -2,8 +2,6 @@
 'use server'
 import { prisma } from '@/lib/prisma'
 import { Feed } from '@/lib/types'
-import { getDeviceTimeZone } from '@/lib/utils'
-import { formatInTimeZone } from 'date-fns-tz'
 import { revalidatePath } from 'next/cache'
 
 const FEEDS_PER_DAY = 10
