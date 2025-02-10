@@ -2,6 +2,7 @@
 'use server'
 import { prisma } from '@/lib/prisma'
 import { Feed } from '@/lib/types'
+import { toZonedTime } from 'date-fns-tz'
 import { revalidatePath } from 'next/cache'
 
 const FEEDS_PER_DAY = 10
@@ -134,10 +135,8 @@ export async function getFeedStats(babyId: number, date: string) {
     return `${hours}:${mins}`;
   };
 
-  // Now in local time
-  const localTime = new Date(dateObj);
-  const offsetMinutes = localTime.getTimezoneOffset();
-  const utcTime = new Date(localTime.getTime() - offsetMinutes * 60 * 1000);
+  // Now in UTC +1 hour
+  const utcTime = new Date(dateObj.getTime() + 1 * 60 * 60 * 1000);
 
   const getTimeDifferenceInMinutes = (laterDate: Date, earlierDate: Date) =>
     Math.round((laterDate.getTime() - earlierDate.getTime()) / (1000 * 60));
