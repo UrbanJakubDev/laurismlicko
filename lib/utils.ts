@@ -7,6 +7,12 @@ export function formatOutputTime(time: Date) {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
-      timeZone: 'UTC'
+      timeZone: getDeviceTimeZone()
    })
+}
+
+
+// Get device timezone from browser as string
+export function getDeviceTimeZone() {
+   return Intl.DateTimeFormat().resolvedOptions().timeZone
 }

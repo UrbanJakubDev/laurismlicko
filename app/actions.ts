@@ -2,6 +2,8 @@
 'use server'
 import { prisma } from '@/lib/prisma'
 import { Feed } from '@/lib/types'
+import { getDeviceTimeZone } from '@/lib/utils'
+import { formatInTimeZone } from 'date-fns-tz'
 import { revalidatePath } from 'next/cache'
 
 const FEEDS_PER_DAY = 10
@@ -54,26 +56,25 @@ export async function createMeasurement(formData: FormData) {
  * @throws {Error} if any of the input values are invalid
  */
 export async function createFeed(formData: FormData) {
-  
+
   const babyIdNum = parseInt(formData.get('babyId') as string)
   const feedTimeStr = formData.get('feedTime') as string
   const amountStr = formData.get('amount') as string
   const type = formData.get('type') as Feed['type']
   const foodId = parseInt(formData.get('foodId') as string)
 
-  // Store feedTime in UTC timezone
-  const feedTime = new Date(feedTimeStr)
+  // Parse feedTime and convert to ISO-8601 format
+  const feedTime = new Date(feedTimeStr).toISOString()
   const amount = parseInt(amountStr, 10)
 
-
-  if (isNaN(babyIdNum) || isNaN(amount) || isNaN(feedTime.getTime())) {
+  if (isNaN(babyIdNum) || isNaN(amount)) {
     throw new Error('Invalid input')
   }
 
   await prisma.feed.create({
     data: {
       babyId: babyIdNum,
-      feedTime: feedTime.toISOString(),
+      feedTime: feedTime,
       amount,
       type,
       foodId
@@ -84,13 +85,17 @@ export async function createFeed(formData: FormData) {
 
 // Helper function to get feed statistics
 export async function getFeedStats(babyId: number, date: string) {
-  // Create start and end of day. Date is in Prague timezone but we need to convert it to UTC 
-  const start = new Date(date)
-  const end = new Date(date)
-  // Set start to 00:00:00 and end to 23:59:59 in UTC timezone
-  start.setHours(0, 0, 0, 0)
-  end.setHours(23, 59, 59, 999)
+  // Convert date string to Date object
+  const dateObj = new Date(date);
+  if (isNaN(dateObj.getTime())) {
+    throw new Error('Invalid date format');
+  }
 
+  // Create start and end of day in UTC
+  const start = new Date(dateObj);
+  const end = new Date(dateObj);
+  start.setUTCHours(0, 0, 0, 0);
+  end.setUTCHours(23, 59, 59, 999);
 
   const feeds = await prisma.feed.findMany({
     where: {
@@ -128,16 +133,12 @@ export async function getFeedStats(babyId: number, date: string) {
     return `${hours}:${mins}`;
   };
 
-  const getCurrentTime = () => {
-    const now = new Date();// Adjust for timezone
-    return now;
-  };
 
   const getTimeDifferenceInMinutes = (laterDate: Date, earlierDate: Date) =>
     Math.round((laterDate.getTime() - earlierDate.getTime()) / (1000 * 60));
 
   const feedsWithTimeDiff = feeds.map((feed, index) => {
-    const timeDiffString = index > 0 
+    const timeDiffString = index > 0
       ? formatTimeInterval(getTimeDifferenceInMinutes(new Date(feed.feedTime), new Date(feeds[index - 1].feedTime)))
       : null;
 
@@ -156,9 +157,8 @@ export async function getFeedStats(babyId: number, date: string) {
 
   const lastFeed = feeds.filter(feed => feed.type === 'main').pop();
   const lastFeedTime = lastFeed ? lastFeed.feedTime : null;
-
-  const timeSinceLastFeed = lastFeedTime 
-    ? formatTimeInterval(getTimeDifferenceInMinutes(getCurrentTime(), new Date(lastFeedTime))) 
+  const timeSinceLastFeed = lastFeedTime
+    ? formatTimeInterval(getTimeDifferenceInMinutes(new Date(), new Date(lastFeedTime)))
     : null;
 
   return {
@@ -259,8 +259,7 @@ export async function updateFood(formData: FormData) {
     data: { name, emoji, unitId }
   });
   revalidatePath(`/foods/${id}`);
-} 
+}
 
 
 
-  

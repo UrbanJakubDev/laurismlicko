@@ -1,5 +1,6 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { useState } from 'react';
+import { formatOutputTime, getDeviceTimeZone } from '@/lib/utils';
 // Define the props for the FeedItem component
 interface FeedItemProps {
     feed: FeedItem
@@ -84,7 +85,7 @@ export default function FeedItem({ feed }: FeedItemProps) {
                 <div className="flex justify-between items-center mb-2">
                     <div className="flex flex-col items-start gap-2">
                         <p className="text-2xl font-semibold">{feed.food?.emoji} {feed.food?.name || 'N/A'}</p>
-                        <p className="text-xl font-semibold text-baby-accent">{formatInTimeZone(new Date(feed.feedTime), 'Europe/Prague', "HH:mm")}</p>
+                        <p className="text-xl font-semibold text-baby-accent">{formatOutputTime(new Date(feed.feedTime))}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                         <p className="text-xl font-semibold ">{feed.food?.unit?.emoji} {feed.amount} {feed.food?.unit?.name || 'ml'}</p>
@@ -104,7 +105,7 @@ export default function FeedItem({ feed }: FeedItemProps) {
                 <div className="flex justify-between items-center mb-2">
                     <div className="flex flex-col items-start gap-2">
                         <p className="">{feed.food?.emoji} {feed.food?.name || 'N/A'}</p>
-                        <p className=" text-baby-accent">{formatInTimeZone(new Date(feed.feedTime), 'Europe/Prague', "HH:mm")}</p>
+                        <p className=" text-baby-accent">{formatOutputTime(new Date(feed.feedTime))}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                         <p className=" ">{feed.food?.unit?.emoji} {feed.amount} {feed.food?.unit?.name || 'ml'}</p>
@@ -127,12 +128,12 @@ export default function FeedItem({ feed }: FeedItemProps) {
             <div className="bg-gray-100 p-4 rounded-lg text-sm space-y-2">
                 <p>UTC: {new Date().toUTCString()}</p>
                 <p>ISO: {new Date().toISOString()}</p>
-                <p>Local: {formatInTimeZone(new Date(), 'Europe/Prague', "yyyy-MM-dd HH:mm:ss")}</p>
+                <p>Local: {formatInTimeZone(new Date(), getDeviceTimeZone(), "yyyy-MM-dd HH:mm:ss")}</p>
             </div>
             <div>
                 <p>Feed time UTC: {new Date(feed.feedTime).toUTCString()}</p>
                 <p>Feed time ISO: {new Date(feed.feedTime).toISOString()}</p>
-                <p>Feed time Local: {formatInTimeZone(new Date(feed.feedTime), 'Europe/Prague', "yyyy-MM-dd HH:mm:ss")}</p>
+                <p>Feed time Local: {formatInTimeZone(new Date(feed.feedTime), getDeviceTimeZone(), "yyyy-MM-dd HH:mm:ss")}</p>
             </div>
         </>
     )

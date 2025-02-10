@@ -6,6 +6,7 @@ import { FeedSection } from '@/components/FeedSection'
 import { formatInTimeZone } from 'date-fns-tz'
 import StatsItem from '@/components/stats/item'
 import { Baby, Feed } from '@/lib/types'
+import { getDeviceTimeZone } from '@/lib/utils'
 
 export default async function BabyPage({
    params,
@@ -19,7 +20,7 @@ export default async function BabyPage({
       return <div>Invalid baby ID</div>
    }
 
-   const todayLocal = formatInTimeZone(new Date(), 'Europe/Prague', 'yyyy-MM-dd HH:mm:ss');
+   const todayLocal = formatInTimeZone(new Date(), getDeviceTimeZone(), 'yyyy-MM-dd HH:mm:ss');
    const stats = await getFeedStats(babyId, todayLocal)
 
    const baby = await prisma.baby.findUnique({
@@ -56,7 +57,7 @@ export default async function BabyPage({
 
    // Function to calculate average feeds per day from count of unique days with feeds and feeds in that day
    const calculateAverageFeeds = (feeds: Feed[]) => {
-      const uniqueDays = new Set(feeds.map(feed => formatInTimeZone(feed.feedTime, 'Europe/Prague', 'yyyy-MM-dd')))
+      const uniqueDays = new Set(feeds.map(feed => formatInTimeZone(feed.feedTime, getDeviceTimeZone(), 'yyyy-MM-dd')))
       return Math.round(feeds.length / uniqueDays.size)
    }
 
@@ -70,7 +71,7 @@ export default async function BabyPage({
             <p className="text-baby-soft">Denní přehled ...</p>
             <p>Aktuální čas: {todayLocal.toString()}</p>
             <p className="text-sm text-gray-500">
-               Časová zóna: {Intl.DateTimeFormat().resolvedOptions().timeZone}
+               Časová zóna: {getDeviceTimeZone()}
             </p>
          </div>
 
