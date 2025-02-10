@@ -2,6 +2,9 @@
 'use server'
 import { prisma } from '@/lib/prisma'
 import { Feed } from '@/lib/types'
+import { getDeviceTimeZone } from '@/lib/utils'
+import { differenceInMinutes } from 'date-fns'
+import { formatInTimeZone } from 'date-fns-tz'
 import { revalidatePath } from 'next/cache'
 
 const FEEDS_PER_DAY = 10
@@ -58,12 +61,15 @@ export async function createFeed(formData: FormData) {
   const babyIdNum = parseInt(formData.get('babyId') as string)
   const feedTimeStr = formData.get('feedTime') as string
   const amountStr = formData.get('amount') as string
+  const amount = parseInt(amountStr, 10)
   const type = formData.get('type') as Feed['type']
   const foodId = parseInt(formData.get('foodId') as string)
 
   // Parse feedTime and convert to ISO-8601 format
-  const feedTime = new Date(feedTimeStr).toISOString()
-  const amount = parseInt(amountStr, 10)
+  const localTime = new Date(feedTimeStr); // Date in browser's time zone
+  const offsetMinutes = localTime.getTimezoneOffset();
+  const utcTime = new Date(localTime.getTime() - offsetMinutes * 60 * 1000);
+  const feedTime = utcTime.toISOString();
 
   if (isNaN(babyIdNum) || isNaN(amount)) {
     throw new Error('Invalid input')
@@ -130,7 +136,6 @@ export async function getFeedStats(babyId: number, date: string) {
     const mins = String(minutes % 60).padStart(2, '0');
     return `${hours}:${mins}`;
   };
-
 
   const getTimeDifferenceInMinutes = (laterDate: Date, earlierDate: Date) =>
     Math.round((laterDate.getTime() - earlierDate.getTime()) / (1000 * 60));

@@ -122,19 +122,7 @@ export default function FeedItem({ feed }: FeedItemProps) {
     return (
         <>
             {feed.type === 'main' ? renderMainFeed() : renderAdditionalFeed()}
-            <pre>
-                {JSON.stringify(feed, null, 2)}
-            </pre>
-            <div className="bg-gray-100 p-4 rounded-lg text-sm space-y-2">
-                <p>UTC: {new Date().toUTCString()}</p>
-                <p>ISO: {new Date().toISOString()}</p>
-                <p>Local: {formatInTimeZone(new Date(), getDeviceTimeZone(), "yyyy-MM-dd HH:mm:ss")}</p>
-            </div>
-            <div>
-                <p>Feed time UTC: {new Date(feed.feedTime).toUTCString()}</p>
-                <p>Feed time ISO: {new Date(feed.feedTime).toISOString()}</p>
-                <p>Feed time Local: {formatInTimeZone(new Date(feed.feedTime), getDeviceTimeZone(), "yyyy-MM-dd HH:mm:ss")}</p>
-            </div>
+       
         </>
     )
 }
