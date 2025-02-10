@@ -19,9 +19,7 @@ export default async function BabyPage({
       return <div>Invalid baby ID</div>
    }
 
-   const today = new Date(Date.now() - (new Date().getTimezoneOffset() * 60 * 1000));
    const todayLocal = formatInTimeZone(new Date(), 'Europe/Prague', 'yyyy-MM-dd HH:mm:ss');
-   const todayUTC = formatInTimeZone(new Date(), 'UTC', 'yyyy-MM-dd HH:mm:ss');
    const stats = await getFeedStats(babyId, todayLocal)
 
    const baby = await prisma.baby.findUnique({
@@ -70,9 +68,10 @@ export default async function BabyPage({
          <div className="text-center">
             <h1 className="text-2xl font-bold text-baby-accent mb-1">{baby.name}</h1>
             <p className="text-baby-soft">Denní přehled ...</p>
-            <p>Dnes je {today.toString()}</p>
-            <p>Dnes je {todayLocal.toString()}</p>
-            <p>Dnes je {todayUTC.toString()}</p>
+            <p>Aktuální čas: {todayLocal.toString()}</p>
+            <p className="text-sm text-gray-500">
+               Časová zóna: {Intl.DateTimeFormat().resolvedOptions().timeZone}
+            </p>
          </div>
 
          {/* Today's Progress */}
@@ -112,7 +111,7 @@ export default async function BabyPage({
                      type="datetime-local"
                      name="feedTime"
                      required
-                     defaultValue={formatInTimeZone(new Date(), 'Europe/Prague', "yyyy-MM-dd'T'HH:mm")}
+                     defaultValue={todayLocal}
                      // defaultValue={new Date().toLocaleTimeString()}
                      className="w-full p-3 border border-baby-pink/20 rounded-xl bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
                   />
