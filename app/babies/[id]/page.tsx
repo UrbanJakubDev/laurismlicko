@@ -112,8 +112,7 @@ export default async function BabyPage({
                      type="datetime-local"
                      name="feedTime"
                      required
-                     defaultValue={formatInTimeZone(new Date(), getDeviceTimeZone(), 'yyyy-MM-dd HH:mm:ss')}
-                     // defaultValue={new Date().toLocaleTimeString()}
+                     defaultValue={formatInTimeZone(new Date(), getDeviceTimeZone(), "yyyy-MM-dd'T'HH:mm")}
                      className="w-full p-3 border border-baby-pink/20 rounded-xl bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
                   />
                </div>
