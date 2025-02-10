@@ -66,6 +66,7 @@ export function FeedSection({
    )
 
 
+
    return (
       <div className="bg-baby-light rounded-2xl shadow-lg p-6">
          <h2 className="text-lg font-semibold text-baby-accent mb-4">Historie krmení</h2>
@@ -83,8 +84,12 @@ export function FeedSection({
                value={formatOutputTime(new Date(medianTimeDifference))}
                units=''
             />
+          
          </div>
          <FeedList feeds={sorted_stats} />
+  
       </div>
    )
 }
+
+

@@ -134,6 +134,11 @@ export async function getFeedStats(babyId: number, date: string) {
     return `${hours}:${mins}`;
   };
 
+  // Now in local time
+  const localTime = new Date(dateObj);
+  const offsetMinutes = localTime.getTimezoneOffset();
+  const utcTime = new Date(localTime.getTime() - offsetMinutes * 60 * 1000);
+
   const getTimeDifferenceInMinutes = (laterDate: Date, earlierDate: Date) =>
     Math.round((laterDate.getTime() - earlierDate.getTime()) / (1000 * 60));
 
@@ -158,7 +163,7 @@ export async function getFeedStats(babyId: number, date: string) {
   const lastFeed = feeds.filter(feed => feed.type === 'main').pop();
   const lastFeedTime = lastFeed ? lastFeed.feedTime : null;
   const timeSinceLastFeed = lastFeedTime
-    ? formatTimeInterval(getTimeDifferenceInMinutes(new Date(), new Date(lastFeedTime)))
+    ? formatTimeInterval(getTimeDifferenceInMinutes(utcTime, new Date(lastFeedTime)))
     : null;
 
   return {

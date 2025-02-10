@@ -1,3 +1,5 @@
+
+
 export function formatOutputTime(time: Date) {
    const date = new Date(time)
    if (isNaN(date.getTime())) {
@@ -16,3 +18,5 @@ export function formatOutputTime(time: Date) {
 export function getDeviceTimeZone() {
    return Intl.DateTimeFormat().resolvedOptions().timeZone
 }
+
+

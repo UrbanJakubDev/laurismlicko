@@ -121,7 +121,7 @@ export default function FeedItem({ feed }: FeedItemProps) {
     return (
         <>
             {feed.type === 'main' ? renderMainFeed() : renderAdditionalFeed()}
-       
+        
         </>
     )
 }
