@@ -3,7 +3,6 @@
 import { prisma } from '@/lib/prisma'
 import { Feed } from '@/lib/types'
 import { revalidatePath } from 'next/cache'
-import { startOfDay, endOfDay } from 'date-fns';
 
 const FEEDS_PER_DAY = 10
 const MILK_FACTOR = 170 // ml per kg
@@ -55,9 +54,6 @@ export async function createMeasurement(formData: FormData) {
  * @throws {Error} if any of the input values are invalid
  */
 export async function createFeed(formData: FormData) {
-  console.log('Creating feed')
-  console.log(formData)
-
   
   const babyIdNum = parseInt(formData.get('babyId') as string)
   const feedTimeStr = formData.get('feedTime') as string
@@ -91,17 +87,10 @@ export async function getFeedStats(babyId: number, date: string) {
   // Create start and end of day. Date is in Prague timezone but we need to convert it to UTC 
   const start = new Date(date)
   const end = new Date(date)
-
-  console.log('Date:', date)
-  console.log('Start:', start)
-  console.log('End:', end)
-
   // Set start to 00:00:00 and end to 23:59:59 in UTC timezone
   start.setHours(0, 0, 0, 0)
   end.setHours(23, 59, 59, 999)
 
-  console.log('Start:', start)
-  console.log('End:', end)
 
   const feeds = await prisma.feed.findMany({
     where: {
