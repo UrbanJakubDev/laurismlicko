@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { formatOutputTime, getDeviceTimeZone } from '@/lib/utils';
+import { formatOutputTime } from '@/lib/utils';
 // Define the props for the FeedItem component
 interface FeedItemProps {
     feed: FeedItem
