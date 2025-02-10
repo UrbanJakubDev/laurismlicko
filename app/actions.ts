@@ -55,15 +55,20 @@ export async function createMeasurement(formData: FormData) {
  * @throws {Error} if any of the input values are invalid
  */
 export async function createFeed(formData: FormData) {
+  console.log('Creating feed')
+  console.log(formData)
+
+  
   const babyIdNum = parseInt(formData.get('babyId') as string)
   const feedTimeStr = formData.get('feedTime') as string
   const amountStr = formData.get('amount') as string
-  const feedTime = new Date(feedTimeStr)
-  const amount = parseInt(amountStr, 10)
   const type = formData.get('type') as Feed['type']
   const foodId = parseInt(formData.get('foodId') as string)
 
-  console.log(babyIdNum, feedTime, amount, type)
+  // Store feedTime in UTC timezone
+  const feedTime = new Date(feedTimeStr)
+  const amount = parseInt(amountStr, 10)
+
 
   if (isNaN(babyIdNum) || isNaN(amount) || isNaN(feedTime.getTime())) {
     throw new Error('Invalid input')
@@ -82,14 +87,21 @@ export async function createFeed(formData: FormData) {
 }
 
 // Helper function to get feed statistics
-export async function getFeedStats(babyId: number, date: Date) {
-  // Create start and end of day in the same timezone as stored in DB (GMT+0100)
-  const start = startOfDay(date);
-  const end = endOfDay(date);
-  
-  // Adjust for timezone offset
-  start.setHours(start.getHours() + 1);
-  end.setHours(end.getHours() + 1);
+export async function getFeedStats(babyId: number, date: string) {
+  // Create start and end of day. Date is in Prague timezone but we need to convert it to UTC 
+  const start = new Date(date)
+  const end = new Date(date)
+
+  console.log('Date:', date)
+  console.log('Start:', start)
+  console.log('End:', end)
+
+  // Set start to 00:00:00 and end to 23:59:59 in UTC timezone
+  start.setHours(0, 0, 0, 0)
+  end.setHours(23, 59, 59, 999)
+
+  console.log('Start:', start)
+  console.log('End:', end)
 
   const feeds = await prisma.feed.findMany({
     where: {
@@ -128,8 +140,7 @@ export async function getFeedStats(babyId: number, date: Date) {
   };
 
   const getCurrentTime = () => {
-    const now = new Date();
-    now.setHours(now.getHours() + 1); // Adjust for timezone
+    const now = new Date();// Adjust for timezone
     return now;
   };
 
