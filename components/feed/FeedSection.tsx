@@ -2,11 +2,12 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { format } from 'date-fns'
-import { DayPicker } from './DatePicker'
+import { DayPicker } from '../DatePicker'
 import { formatOutputTime } from '@/lib/utils'
-import StatsItem from './stats/item'
+import StatsItem from '../stats/item'
 import { Baby, Feed } from '@/lib/types'
-import FeedList from './feed/feedList'
+import FeedList from './feedList'
+import FeedTopStats from './feedTopStats'
 
 type FeedStats = {
    feeds: Feed[]
@@ -75,17 +76,7 @@ export function FeedSection({
             selectedDate={selectedDate}
             onChange={handleDateChange}
          />
-         <div className="grid grid-cols-2 gap-4 mb-6">
-            <StatsItem label="Poslední jídlo před" value={stats.timeSinceLastFeed} units='' />
-            <StatsItem label="Celkem vypito" value={stats.totalMilk} units='ml' />
-            <StatsItem label="Celkem" value={stats.feedCount} />
-            <StatsItem
-               label="Prümerná doba mezi jídly"
-               value={formatOutputTime(new Date(medianTimeDifference))}
-               units=''
-            />
-          
-         </div>
+         <FeedTopStats stats={stats} medianTimeDifference={medianTimeDifference} />
          <FeedList feeds={sorted_stats} />
   
       </div>

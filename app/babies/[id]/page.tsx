@@ -2,7 +2,7 @@
 import { prisma } from '@/lib/prisma'
 import { createFeed, getFeedStats } from '@/app/actions'
 import { SubmitButton } from '@/components/SubmitButton'
-import { FeedSection } from '@/components/FeedSection'
+import { FeedSection } from '@/components/feed/FeedSection'
 import { formatInTimeZone } from 'date-fns-tz'
 import StatsItem from '@/components/stats/item'
 import { Baby, Feed } from '@/lib/types'
