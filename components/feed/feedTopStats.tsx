@@ -1,4 +1,3 @@
-import StatsItem from "../stats/item";
 import { formatOutputTime } from "@/lib/utils";
 
 type FeedTopStatsProps = {
@@ -19,7 +18,6 @@ type FeedTopStatsProps = {
 
 export default function FeedTopStats({ stats, medianTimeDifference }: FeedTopStatsProps) {
 
-   const style = false
 
    // Helper function to calculate total amount by food ID
    const calculateTotalAmount = (foodId?: number): number => {

@@ -8,9 +8,9 @@ type Props = {
 
 const StatsItem = (props: Props) => {
    return (
-      <div className="bg-baby-rose/20 p-4 rounded-xl text-center drop-shadow-sm border border-white">
-         <p className="text-sm text-baby-soft mb-1">{props.label}</p>
-         <p className="text-xl font-semibold">{props.value} {props.units || ""}</p>
+      <div className="p-4 rounded-xl text-center ">
+         <p className="text-sm text-baby-text mb-1">{props.label}</p>
+         <p className="text-xl font-semibold text-baby-accent">{props.value} {props.units || ""}</p>
       </div>
    )
 }

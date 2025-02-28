@@ -10,7 +10,7 @@ export function DayPicker({
   onChange: (date: Date) => void
 }) {
   return (
-    <div className="flex items-center justify-between mb-4 bg-white border border-gray-100 shadow-md rounded-xl">
+    <div className="flex items-center justify-between mb-4 bg-cardbg border border-gray-100 shadow-md rounded-lg">
       <button
         onClick={() => onChange(subDays(selectedDate, 1))}
         className="p-2 text-baby-accent hover:text-baby-soft text-3xl"

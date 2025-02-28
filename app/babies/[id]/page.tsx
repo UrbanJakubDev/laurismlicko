@@ -64,7 +64,7 @@ export default async function BabyPage({
    const foods = await prisma.food.findMany()
 
    return (
-      <div className="max-w-md mx-auto p-4 pb-20 space-y-6">
+      <div className="max-w-md mx-auto p-4 pb-20">
          {/* Header */}
          <div className="text-center">
             <h1 className="text-2xl font-bold text-baby-accent mb-1">{baby.name}</h1>
@@ -76,8 +76,8 @@ export default async function BabyPage({
          </div>
 
          {/* Today's Progress */}
-         <div className="bg-baby-light rounded-2xl shadow-lg p-6">
-            <h2 className="text-lg font-semibold text-baby-accent mb-4">Dnešní přehled</h2>
+         <h2 className="text-lg font-semibold text-baby-accent mb-2 mt-6">Dnešní přehled</h2>
+         <div className="rounded-lg p-6 bg-cardbg shadow-md ">
             <div className="grid grid-cols-2 gap-4">
                {/* <StatsItem label="Váha" value={latestMeasurement.weight} units='g' />
                <StatsItem label="Délka" value={latestMeasurement.height} units='cm' /> */}
@@ -102,8 +102,8 @@ export default async function BabyPage({
          </div>
 
          {/* Quick Add Feed */}
-         <div className="bg-baby-light rounded-2xl shadow-lg p-6">
-            <h2 className="text-lg font-semibold text-baby-accent mb-4">Přidat krmení</h2>
+         <h2 className="text-lg font-semibold text-baby-accent mt-6 mb-2">Přidat krmení</h2>
+         <div className="bg-cardbg rounded-lg shadow-lg p-6">
             <form action={createFeed} className="space-y-4">
                <input type="hidden" name="babyId" value={baby.id} />
                <div className="space-y-2">
@@ -113,7 +113,7 @@ export default async function BabyPage({
                      name="feedTime"
                      required
                      defaultValue={formatInTimeZone(new Date(), 'Europe/Prague', "yyyy-MM-dd'T'HH:mm")}
-                     className="w-full p-3 border border-baby-pink/20 rounded-xl bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
+                     className="w-full p-3 border border-baby-pink/20 rounded-lg bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
                   />
                </div>
                <div className="space-y-2">
@@ -123,7 +123,7 @@ export default async function BabyPage({
                      name="amount"
                      required
                      defaultValue={stats.averageAmount >= stats.remainingMilk ? stats.remainingMilk : stats.averageAmount}
-                     className="w-full p-3 border border-baby-pink/20 rounded-xl bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
+                     className="w-full p-3 border border-baby-pink/20 rounded-lg bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
                   />
                   <div className="space-y-2">
                      <label className="block text-sm text-baby-soft">Typ krmení</label>
@@ -131,7 +131,7 @@ export default async function BabyPage({
                         name="type"
                         required
                         defaultValue="main"
-                        className="w-full p-3 border border-baby-pink/20 rounded-xl bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
+                        className="w-full p-3 border border-baby-pink/20 rounded-lg bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
                      >
                         <option value="main">Hlavní</option>
                         <option value="additional">Doplňkové</option>
@@ -143,7 +143,7 @@ export default async function BabyPage({
                      <select
                         name="foodId"
                         required
-                        className="w-full p-3 border border-baby-pink/20 rounded-xl bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
+                        className="w-full p-3 border border-baby-pink/20 rounded-lg bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
                      >
                         {foods.map(food => (
                            <option key={food.id} value={food.id}>{food.name}</option>
@@ -158,13 +158,12 @@ export default async function BabyPage({
          </div>
 
          {/* Feed Section */}
-         <div className="space-y-4">
+         <div className="space-y-4 mt-6">
             <FeedSection
                initialStats={stats}
                baby={baby}
             />
          </div>
-
       </div>
    )
 }
