@@ -69,16 +69,25 @@ export function FeedSection({
 
 
    return (
-      <div className="bg-baby-light rounded-2xl shadow-lg p-6">
-         <h2 className="text-lg font-semibold text-baby-accent mb-4">Historie krmení</h2>
-
+      <div className="rounded-2xl p-4">
+         <h2 className="text-lg font-semibold text-baby-accent mb-2">Historie krmení</h2>
          <DayPicker
             selectedDate={selectedDate}
             onChange={handleDateChange}
          />
-         <FeedTopStats stats={stats} medianTimeDifference={medianTimeDifference} />
-         <FeedList feeds={sorted_stats} />
-  
+         <FeedTopStats 
+            stats={{
+               ...stats,
+               timeSinceLastFeed: stats.timeSinceLastFeed || ''
+            }} 
+            medianTimeDifference={medianTimeDifference} 
+         />
+         <FeedList 
+            feeds={sorted_stats.map(feed => ({
+               ...feed,
+               foodId: feed.foodId || 0
+            }))} 
+         />
       </div>
    )
 }

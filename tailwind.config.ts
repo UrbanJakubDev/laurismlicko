@@ -15,10 +15,11 @@ module.exports = {
           pink: '#FFC0CB',
           rose: '#FFE4E1',
           light: '#FFF0F5',
-          pastel: '#FFB6C1',
-          soft: '#FFA07A',
-          accent: '#FF69B4'
-        }
+          pastel: '#736656',
+          soft: '#A68376',
+          accent: '#8C4F4F'
+        },
+        cardbg: 'var(--card-bg)'
       },
       borderRadius: {
         'xl': '1rem',
