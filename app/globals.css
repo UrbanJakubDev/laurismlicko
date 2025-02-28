@@ -3,14 +3,24 @@
 @tailwind utilities;
 
 :root {
-  --background: #ead7e4;
+  --background: #BFB9AE;
   --foreground: #171717;
+  --card-bg: #F2F2F2;
+  --baby-accent: #8C4F4F;
+  --baby-soft: #A68376;
+  --baby-dark: #736656;
+  --baby-text: #191919;
 }
 
 @media (prefers-color-scheme: light) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --card-bg: #F2F2F2;
+    --baby-accent: #8C4F4F;
+    --baby-soft: #A68376;
+    --baby-dark: #736656;
+    --baby-text: #191919;
   }
 }
 

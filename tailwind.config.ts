@@ -12,13 +12,12 @@ module.exports = {
         background: 'var(--background)',
         foreground: 'var(--foreground)',
         baby: {
-          pink: '#FFC0CB',
-          rose: '#FFE4E1',
-          light: '#FFF0F5',
-          pastel: '#FFB6C1',
-          soft: '#FFA07A',
-          accent: '#FF69B4'
-        }
+          accent: 'var(--baby-accent)',
+          soft: 'var(--baby-soft)',
+          dark: 'var(--baby-dark)',
+          text: 'var(--baby-text)'
+        },
+        cardbg: 'var(--card-bg)'
       },
       borderRadius: {
         'xl': '1rem',

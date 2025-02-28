@@ -80,7 +80,7 @@ export default function FeedItem({ feed }: FeedItemProps) {
 
     const renderMainFeed = () => {
         return (
-            <div className="bg-white shadow-md rounded-lg p-4 mb-4" onClick={() => setIsExpanded(!isExpanded)}>
+            <div className="bg-cardbg shadow-md rounded-lg p-4 mb-4" onClick={() => setIsExpanded(!isExpanded)}>
                 <div className="flex justify-between items-center mb-2">
                     <div className="flex flex-col items-start gap-2">
                         <p className="text-2xl font-semibold">{feed.food?.emoji} {feed.food?.name || 'N/A'}</p>

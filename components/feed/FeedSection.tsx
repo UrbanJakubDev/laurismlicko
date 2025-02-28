@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react'
 import { format } from 'date-fns'
 import { DayPicker } from '../DatePicker'
-import { formatOutputTime } from '@/lib/utils'
-import StatsItem from '../stats/item'
 import { Baby, Feed } from '@/lib/types'
 import FeedList from './feedList'
 import FeedTopStats from './feedTopStats'
@@ -69,16 +67,25 @@ export function FeedSection({
 
 
    return (
-      <div className="bg-baby-light rounded-2xl shadow-lg p-6">
-         <h2 className="text-lg font-semibold text-baby-accent mb-4">Historie krmení</h2>
-
+      <div className="rounded-2xl,">
+         <h2 className="text-lg font-semibold text-baby-accent mb-2">Historie krmení</h2>
          <DayPicker
             selectedDate={selectedDate}
             onChange={handleDateChange}
          />
-         <FeedTopStats stats={stats} medianTimeDifference={medianTimeDifference} />
-         <FeedList feeds={sorted_stats} />
-  
+         <FeedTopStats 
+            stats={{
+               ...stats,
+               timeSinceLastFeed: stats.timeSinceLastFeed || ''
+            }} 
+            medianTimeDifference={medianTimeDifference} 
+         />
+         <FeedList 
+            feeds={sorted_stats.map(feed => ({
+               ...feed,
+               foodId: feed.foodId || 0
+            }))} 
+         />
       </div>
    )
 }
