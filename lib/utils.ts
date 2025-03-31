@@ -3,11 +3,14 @@ export function formatOutputTime(time: Date) {
   if (isNaN(date.getTime())) {
     return "-";
   }
-  return date.toLocaleTimeString("cs-CZ", {
+  // Convert the date to Prague timezone
+  const pragueDate = new Date(
+    date.getTime() + date.getTimezoneOffset() * 60000
+  );
+  return pragueDate.toLocaleTimeString("cs-CZ", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
-    timeZone: "Europe/Prague",
   });
 }
 

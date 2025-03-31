@@ -58,11 +58,8 @@ export async function createFeed(formData: FormData) {
   const type = formData.get("type") as Feed["type"];
   const foodId = parseInt(formData.get("foodId") as string);
 
-  // Parse feedTime and convert to UTC while preserving Prague time
-  const pragueTime = new Date(feedTimeStr);
-  const utcTime = new Date(
-    pragueTime.getTime() - pragueTime.getTimezoneOffset() * 60000
-  );
+  // Parse feedTime directly - it's already in the correct timezone from the form
+  const feedTime = new Date(feedTimeStr);
 
   if (isNaN(babyIdNum) || isNaN(amount)) {
     throw new Error("Invalid input");
@@ -71,7 +68,7 @@ export async function createFeed(formData: FormData) {
   await prisma.feed.create({
     data: {
       babyId: babyIdNum,
-      feedTime: utcTime,
+      feedTime,
       amount,
       type,
       foodId,
@@ -138,6 +135,7 @@ export async function getFeedStats(babyId: number, date: string) {
 
   // Get current time in Prague timezone
   const now = new Date();
+  const pragueNow = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
 
   const getTimeDifferenceInMinutes = (laterDate: Date, earlierDate: Date) =>
     Math.round((laterDate.getTime() - earlierDate.getTime()) / (1000 * 60));
@@ -145,7 +143,7 @@ export async function getFeedStats(babyId: number, date: string) {
   // Convert UTC times back to Prague timezone
   const feedsWithTimeDiff = feeds.map((feed, index) => {
     const pragueTime = new Date(
-      feed.feedTime.getTime() + feed.feedTime.getTimezoneOffset() * 60000
+      feed.feedTime.getTime() - feed.feedTime.getTimezoneOffset() * 60000
     );
     const timeDiffString =
       index > 0
@@ -153,7 +151,7 @@ export async function getFeedStats(babyId: number, date: string) {
             getTimeDifferenceInMinutes(
               pragueTime,
               new Date(
-                feeds[index - 1].feedTime.getTime() +
+                feeds[index - 1].feedTime.getTime() -
                   feeds[index - 1].feedTime.getTimezoneOffset() * 60000
               )
             )
@@ -177,12 +175,12 @@ export async function getFeedStats(babyId: number, date: string) {
   const lastFeed = feeds.filter((feed) => feed.type === "main").pop();
   const lastFeedTime = lastFeed
     ? new Date(
-        lastFeed.feedTime.getTime() +
+        lastFeed.feedTime.getTime() -
           lastFeed.feedTime.getTimezoneOffset() * 60000
       )
     : null;
   const timeSinceLastFeed = lastFeedTime
-    ? formatTimeInterval(getTimeDifferenceInMinutes(now, lastFeedTime))
+    ? formatTimeInterval(getTimeDifferenceInMinutes(pragueNow, lastFeedTime))
     : null;
 
   return {
