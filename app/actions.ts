@@ -133,9 +133,9 @@ export async function getFeedStats(babyId: number, date: string) {
     return `${hours}:${mins}`;
   };
 
-  // Get current time in Prague timezone
+  // Get current time in UTC to avoid timezone issues
   const now = new Date();
-  const pragueNow = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  const nowUTC = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
 
   const getTimeDifferenceInMinutes = (laterDate: Date, earlierDate: Date) =>
     Math.round((laterDate.getTime() - earlierDate.getTime()) / (1000 * 60));
@@ -179,8 +179,15 @@ export async function getFeedStats(babyId: number, date: string) {
           lastFeed.feedTime.getTimezoneOffset() * 60000
       )
     : null;
+
+  // Calculate timeSinceLastFeed using UTC times to avoid timezone issues
   const timeSinceLastFeed = lastFeedTime
-    ? formatTimeInterval(getTimeDifferenceInMinutes(pragueNow, lastFeedTime))
+    ? formatTimeInterval(
+        getTimeDifferenceInMinutes(
+          new Date(nowUTC.getTime() - nowUTC.getTimezoneOffset() * 60000),
+          lastFeedTime
+        )
+      )
     : null;
 
   return {
