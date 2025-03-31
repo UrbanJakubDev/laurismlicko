@@ -34,6 +34,9 @@ export default function FeedTopStats({ stats, medianTimeDifference }: FeedTopSta
       }, 0);
    }
 
+   // Get the last feed time from stats.feeds array (they are sorted by feedTime ascending)
+   const lastFeedTime = stats.feeds[stats.feeds.length - 1]?.feedTime;
+
    // Calculate total milk for foodId 4
    const totalMilkFoodId = calculateTotalAmount(4);
 
@@ -50,7 +53,7 @@ export default function FeedTopStats({ stats, medianTimeDifference }: FeedTopSta
          <div className="border-b border-gray-100 pb-4 mb-4">
             <div className="flex justify-between items-center">
                <h4 className="text-gray-800">Poslední jídlo </h4>
-               <p className="text-2xl font-semibold">{stats.feeds[0]?.feedTime ? new Date(stats.feeds[0].feedTime).toUTCString().split(' ')[4] : ''}</p>
+               <p className="text-2xl font-semibold">{lastFeedTime ? new Date(lastFeedTime).toUTCString().split(' ')[4] : ''}</p>
             </div>
          </div>
 
