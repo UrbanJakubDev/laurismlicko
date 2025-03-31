@@ -49,8 +49,8 @@ export default function FeedTopStats({ stats, medianTimeDifference }: FeedTopSta
          {/* Primary Info - Time Since Last Feed */}
          <div className="border-b border-gray-100 pb-4 mb-4">
             <div className="flex justify-between items-center">
-               <h4 className="text-gray-800">Poslední jídlo před</h4>
-               <p className="text-2xl font-semibold">{stats.timeSinceLastFeed}</p>
+               <h4 className="text-gray-800">Poslední jídlo </h4>
+               <p className="text-2xl font-semibold">{stats.feeds[0]?.feedTime.toLocaleTimeString()}</p>
             </div>
          </div>
 
