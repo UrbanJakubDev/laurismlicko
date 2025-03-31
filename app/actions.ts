@@ -1,33 +1,30 @@
 // app/actions.ts
-'use server'
-import { prisma } from '@/lib/prisma'
-import { Feed } from '@/lib/types'
-import { revalidatePath } from 'next/cache'
+"use server";
+import { prisma } from "@/lib/prisma";
+import { Feed } from "@/lib/types";
+import { revalidatePath } from "next/cache";
 
-const FEEDS_PER_DAY = 10
-const MILK_FACTOR = 170 // ml per kg
-
-
+const FEEDS_PER_DAY = 10;
+const MILK_FACTOR = 170; // ml per kg
 
 export async function createBaby(formData: FormData) {
-  const name = formData.get('name') as string
-  const birthday = new Date(formData.get('birthday') as string)
+  const name = formData.get("name") as string;
+  const birthday = new Date(formData.get("birthday") as string);
 
   await prisma.baby.create({
-    data: { name, birthday }
-  })
-  revalidatePath('/babies')
+    data: { name, birthday },
+  });
+  revalidatePath("/babies");
 }
 
-
 export async function createMeasurement(formData: FormData) {
-  const babyId = parseInt(formData.get('babyId') as string)
-  const weight = parseInt(formData.get('weight') as string) // in grams
-  const height = parseFloat(formData.get('height') as string)
+  const babyId = parseInt(formData.get("babyId") as string);
+  const weight = parseInt(formData.get("weight") as string); // in grams
+  const height = parseFloat(formData.get("height") as string);
 
   // Calculate daily milk amount based on weight
-  const dailyMilkAmount = Math.round((weight / 1000) * MILK_FACTOR)
-  const averageFeedAmount = Math.round(dailyMilkAmount / FEEDS_PER_DAY)
+  const dailyMilkAmount = Math.round((weight / 1000) * MILK_FACTOR);
+  const averageFeedAmount = Math.round(dailyMilkAmount / FEEDS_PER_DAY);
 
   await prisma.babyMeasurement.create({
     data: {
@@ -36,10 +33,10 @@ export async function createMeasurement(formData: FormData) {
       height,
       dailyMilkAmount,
       feedsPerDay: FEEDS_PER_DAY,
-      averageFeedAmount
-    }
-  })
-  revalidatePath(`/babies/${babyId}`)
+      averageFeedAmount,
+    },
+  });
+  revalidatePath(`/babies/${babyId}`);
 }
 
 /**
@@ -54,34 +51,33 @@ export async function createMeasurement(formData: FormData) {
  * @throws {Error} if any of the input values are invalid
  */
 export async function createFeed(formData: FormData) {
+  const babyIdNum = parseInt(formData.get("babyId") as string);
+  const feedTimeStr = formData.get("feedTime") as string;
+  const amountStr = formData.get("amount") as string;
+  const amount = parseInt(amountStr, 10);
+  const type = formData.get("type") as Feed["type"];
+  const foodId = parseInt(formData.get("foodId") as string);
 
-  const babyIdNum = parseInt(formData.get('babyId') as string)
-  const feedTimeStr = formData.get('feedTime') as string
-  const amountStr = formData.get('amount') as string
-  const amount = parseInt(amountStr, 10)
-  const type = formData.get('type') as Feed['type']
-  const foodId = parseInt(formData.get('foodId') as string)
-
-  // Parse feedTime and convert to ISO-8601 format
-  const localTime = new Date(feedTimeStr); // Date in browser's time zone
-  const offsetMinutes = localTime.getTimezoneOffset();
-  const utcTime = new Date(localTime.getTime() - offsetMinutes * 60 * 1000);
-  const feedTime = utcTime.toISOString();
+  // Parse feedTime and convert to UTC while preserving Prague time
+  const pragueTime = new Date(feedTimeStr);
+  const utcTime = new Date(
+    pragueTime.getTime() - pragueTime.getTimezoneOffset() * 60000
+  );
 
   if (isNaN(babyIdNum) || isNaN(amount)) {
-    throw new Error('Invalid input')
+    throw new Error("Invalid input");
   }
 
   await prisma.feed.create({
     data: {
       babyId: babyIdNum,
-      feedTime: feedTime,
+      feedTime: utcTime,
       amount,
       type,
-      foodId
-    }
-  })
-  revalidatePath(`/babies/${babyIdNum}`)
+      foodId,
+    },
+  });
+  revalidatePath(`/babies/${babyIdNum}`);
 }
 
 // Helper function to get feed statistics
@@ -89,24 +85,30 @@ export async function getFeedStats(babyId: number, date: string) {
   // Convert date string to Date object
   const dateObj = new Date(date);
   if (isNaN(dateObj.getTime())) {
-    throw new Error('Invalid date format');
+    throw new Error("Invalid date format");
   }
 
-  // Create start and end of day in UTC
+  // Create start and end of day in Prague timezone
   const start = new Date(dateObj);
   const end = new Date(dateObj);
-  start.setUTCHours(0, 0, 0, 0);
-  end.setUTCHours(23, 59, 59, 999);
+  start.setHours(0, 0, 0, 0);
+  end.setHours(23, 59, 59, 999);
+
+  // Convert to UTC for database query
+  const utcStart = new Date(
+    start.getTime() - start.getTimezoneOffset() * 60000
+  );
+  const utcEnd = new Date(end.getTime() - end.getTimezoneOffset() * 60000);
 
   const feeds = await prisma.feed.findMany({
     where: {
       babyId,
       feedTime: {
-        gte: start,
-        lt: end
-      }
+        gte: utcStart,
+        lt: utcEnd,
+      },
     },
-    orderBy: { feedTime: 'asc' },
+    orderBy: { feedTime: "asc" },
     include: {
       food: {
         select: {
@@ -115,38 +117,52 @@ export async function getFeedStats(babyId: number, date: string) {
           unit: {
             select: {
               name: true,
-              emoji: true
-            }
-          }
-        }
-      }
-    }
+              emoji: true,
+            },
+          },
+        },
+      },
+    },
   });
 
   const latestMeasurement = await prisma.babyMeasurement.findFirst({
     where: { babyId },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
   });
 
   const formatTimeInterval = (minutes: number) => {
-    const hours = String(Math.floor(minutes / 60)).padStart(2, '0');
-    const mins = String(minutes % 60).padStart(2, '0');
+    const hours = String(Math.floor(minutes / 60)).padStart(2, "0");
+    const mins = String(minutes % 60).padStart(2, "0");
     return `${hours}:${mins}`;
   };
 
-  // Now in UTC +1 hour
-  const utcTime = new Date(dateObj.getTime() + 1 * 60 * 60 * 1000);
+  // Get current time in Prague timezone
+  const now = new Date();
 
   const getTimeDifferenceInMinutes = (laterDate: Date, earlierDate: Date) =>
     Math.round((laterDate.getTime() - earlierDate.getTime()) / (1000 * 60));
 
+  // Convert UTC times back to Prague timezone
   const feedsWithTimeDiff = feeds.map((feed, index) => {
-    const timeDiffString = index > 0
-      ? formatTimeInterval(getTimeDifferenceInMinutes(new Date(feed.feedTime), new Date(feeds[index - 1].feedTime)))
-      : null;
+    const pragueTime = new Date(
+      feed.feedTime.getTime() + feed.feedTime.getTimezoneOffset() * 60000
+    );
+    const timeDiffString =
+      index > 0
+        ? formatTimeInterval(
+            getTimeDifferenceInMinutes(
+              pragueTime,
+              new Date(
+                feeds[index - 1].feedTime.getTime() +
+                  feeds[index - 1].feedTime.getTimezoneOffset() * 60000
+              )
+            )
+          )
+        : null;
 
     return {
       ...feed,
+      feedTime: pragueTime,
       timeSinceLastFeed: timeDiffString,
     };
   });
@@ -158,10 +174,15 @@ export async function getFeedStats(babyId: number, date: string) {
   const remainingFeeds = FEEDS_PER_DAY - feedCount;
   const averageAmount = feedCount > 0 ? Math.round(totalMilk / feedCount) : 0;
 
-  const lastFeed = feeds.filter(feed => feed.type === 'main').pop();
-  const lastFeedTime = lastFeed ? lastFeed.feedTime : null;
+  const lastFeed = feeds.filter((feed) => feed.type === "main").pop();
+  const lastFeedTime = lastFeed
+    ? new Date(
+        lastFeed.feedTime.getTime() +
+          lastFeed.feedTime.getTimezoneOffset() * 60000
+      )
+    : null;
   const timeSinceLastFeed = lastFeedTime
-    ? formatTimeInterval(getTimeDifferenceInMinutes(utcTime, new Date(lastFeedTime)))
+    ? formatTimeInterval(getTimeDifferenceInMinutes(now, lastFeedTime))
     : null;
 
   return {
@@ -174,17 +195,18 @@ export async function getFeedStats(babyId: number, date: string) {
     averageAmount,
     lastFeedTime,
     timeSinceLastFeed,
-    recommendedNextAmount: remainingFeeds > 0 ? Math.round(remainingMilk / remainingFeeds) : 0,
+    recommendedNextAmount:
+      remainingFeeds > 0 ? Math.round(remainingMilk / remainingFeeds) : 0,
     feedsPerDay: FEEDS_PER_DAY,
   };
 }
 
 export async function createPoop(formData: FormData) {
-  const babyId = parseInt(formData.get('babyId') as string)
-  const poopTimeLocal = new Date(formData.get('poopTime') as string)
-  const color = formData.get('color') as string
-  const consistency = formData.get('consistency') as string
-  const amount = parseInt(formData.get('amount') as string)
+  const babyId = parseInt(formData.get("babyId") as string);
+  const poopTimeLocal = new Date(formData.get("poopTime") as string);
+  const color = formData.get("color") as string;
+  const consistency = formData.get("consistency") as string;
+  const amount = parseInt(formData.get("amount") as string);
 
   await prisma.poop.create({
     data: {
@@ -192,77 +214,72 @@ export async function createPoop(formData: FormData) {
       poopTime: poopTimeLocal.toISOString(),
       color,
       consistency,
-      amount
-    }
-  })
-  revalidatePath(`/babies/${babyId}`)
+      amount,
+    },
+  });
+  revalidatePath(`/babies/${babyId}`);
 }
 
-
 export async function deleteMeasurement(formData: FormData) {
-  const id = parseInt(formData.get('id') as string)
-  const babyId = parseInt(formData.get('babyId') as string)
-  await prisma.babyMeasurement.delete({ where: { id } })
-  revalidatePath(`/babies/${babyId}`)
+  const id = parseInt(formData.get("id") as string);
+  const babyId = parseInt(formData.get("babyId") as string);
+  await prisma.babyMeasurement.delete({ where: { id } });
+  revalidatePath(`/babies/${babyId}`);
 }
 
 export async function deleteFeed(formData: FormData) {
-  const id = parseInt(formData.get('id') as string)
-  const babyId = parseInt(formData.get('babyId') as string)
-  await prisma.feed.delete({ where: { id } })
-  revalidatePath(`/babies/${babyId}`)
+  const id = parseInt(formData.get("id") as string);
+  const babyId = parseInt(formData.get("babyId") as string);
+  await prisma.feed.delete({ where: { id } });
+  revalidatePath(`/babies/${babyId}`);
 }
 
 export async function deletePoop(formData: FormData) {
-  const id = parseInt(formData.get('id') as string)
-  const babyId = parseInt(formData.get('babyId') as string)
-  await prisma.poop.delete({ where: { id } })
-  revalidatePath(`/babies/${babyId}`)
+  const id = parseInt(formData.get("id") as string);
+  const babyId = parseInt(formData.get("babyId") as string);
+  await prisma.poop.delete({ where: { id } });
+  revalidatePath(`/babies/${babyId}`);
 }
 
 export async function createFood(formData: FormData) {
-  const name = formData.get('name') as string
+  const name = formData.get("name") as string;
 
   await prisma.food.create({
-    data: { name }
-  })
-  revalidatePath('/foods')
+    data: { name },
+  });
+  revalidatePath("/foods");
 }
 
 export async function createUnit(formData: FormData) {
-  const name = formData.get('name') as string
-  const emoji = formData.get('emoji') as string
+  const name = formData.get("name") as string;
+  const emoji = formData.get("emoji") as string;
 
   await prisma.unit.create({
-    data: { name, emoji }
-  })
-  revalidatePath('/units')
+    data: { name, emoji },
+  });
+  revalidatePath("/units");
 }
 
 export async function updateFood(formData: FormData) {
-
-  console.log('Updating food')
-  console.log(formData)
-  const idStr = formData.get('id') as string;
+  console.log("Updating food");
+  console.log(formData);
+  const idStr = formData.get("id") as string;
   const id = parseInt(idStr, 10);
-  const name = formData.get('name') as string;
-  const emoji = formData.get('emoji') as string;
-  const unitIdStr = formData.get('unitId') as string;
+  const name = formData.get("name") as string;
+  const emoji = formData.get("emoji") as string;
+  const unitIdStr = formData.get("unitId") as string;
   const unitId = parseInt(unitIdStr, 10);
 
-  console.log('ID:', idStr, 'Parsed ID:', id);
-  console.log('Unit ID:', unitIdStr, 'Parsed Unit ID:', unitId);
+  console.log("ID:", idStr, "Parsed ID:", id);
+  console.log("Unit ID:", unitIdStr, "Parsed Unit ID:", unitId);
 
   if (isNaN(id) || isNaN(unitId)) {
-    throw new Error('Invalid input: ID and Unit ID must be numbers');
+    throw new Error("Invalid input: ID and Unit ID must be numbers");
   }
 
   await prisma.food.update({
     where: { id },
-    data: { name, emoji, unitId }
+    data: { name, emoji, unitId },
   });
   revalidatePath(`/foods/${id}`);
 }
-
-
-
