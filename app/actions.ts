@@ -133,9 +133,8 @@ export async function getFeedStats(babyId: number, date: string) {
     return `${hours}:${mins}`;
   };
 
-  // Get current time in UTC to avoid timezone issues
+  // Get current time in UTC
   const now = new Date();
-  const nowUTC = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
 
   const getTimeDifferenceInMinutes = (laterDate: Date, earlierDate: Date) =>
     Math.round((laterDate.getTime() - earlierDate.getTime()) / (1000 * 60));
@@ -173,21 +172,11 @@ export async function getFeedStats(babyId: number, date: string) {
   const averageAmount = feedCount > 0 ? Math.round(totalMilk / feedCount) : 0;
 
   const lastFeed = feeds.filter((feed) => feed.type === "main").pop();
-  const lastFeedTime = lastFeed
-    ? new Date(
-        lastFeed.feedTime.getTime() -
-          lastFeed.feedTime.getTimezoneOffset() * 60000
-      )
-    : null;
+  const lastFeedTime = lastFeed ? lastFeed.feedTime : null;
 
-  // Calculate timeSinceLastFeed using UTC times to avoid timezone issues
+  // Calculate timeSinceLastFeed using UTC times directly
   const timeSinceLastFeed = lastFeedTime
-    ? formatTimeInterval(
-        getTimeDifferenceInMinutes(
-          new Date(nowUTC.getTime() - nowUTC.getTimezoneOffset() * 60000),
-          lastFeedTime
-        )
-      )
+    ? formatTimeInterval(getTimeDifferenceInMinutes(now, lastFeedTime))
     : null;
 
   return {

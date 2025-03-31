@@ -16,5 +16,5 @@ export function formatOutputTime(time: Date) {
 
 // Get device timezone from browser as string
 export function getDeviceTimeZone() {
-  return "Europe/Prague";
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
 }
