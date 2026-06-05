@@ -173,9 +173,12 @@ export const feedRouter = router({
       });
 
       // Získání base URL pro produkci nebo dev
-      const baseUrl = process.env.VERCEL_URL 
-        ? `https://${process.env.VERCEL_URL}` 
-        : 'https://misa-mlicko.ngrok.app'; // pro lokální testování je potřeba ngrok nebo podobný tunel, případně to spadne. Qstash neumí volat localhost
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL 
+        || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
+        
+      if (!baseUrl) {
+        throw new Error('Chybí base URL pro QStash. Nastav NEXT_PUBLIC_SITE_URL v .env na tvůj ngrok tunel.');
+      }
 
       try {
         const res = await qstash.publishJSON({
