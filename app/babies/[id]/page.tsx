@@ -1,208 +1,87 @@
-// app/babies/[id]/page.tsx
-import { prisma } from "@/lib/prisma";
-import { createFeed, getFeedStats } from "@/app/actions";
-import { SubmitButton } from "@/components/SubmitButton";
-import { FeedSection } from "@/components/feed/FeedSection";
-import { formatInTimeZone } from "date-fns-tz";
-import StatsItem from "@/components/stats/item";
-import { Baby, Feed } from "@/lib/types";
-import { getDeviceTimeZone } from "@/lib/utils";
+import { getServerCaller } from '@/server/caller'
+import { getDeviceTimeZone } from '@/lib/utils'
+import { formatInTimeZone } from 'date-fns-tz'
+import { FeedSection } from '@/components/feed/FeedSection'
+import { AddFeedSheet } from '@/components/feed/AddFeedSheet'
+import { ProgressRing } from '@/components/ui/ProgressRing'
+import { Card } from '@/components/ui/Card'
+import { PageHeader } from '@/components/layout/PageHeader'
 
 export default async function BabyPage({ params }: { params: { id: string } }) {
-  const { id } = await params;
-  const babyId = parseInt(id);
+  const { id } = await params
+  const babyId = parseInt(id)
 
   if (isNaN(babyId)) {
-    return <div>Invalid baby ID</div>;
+    return <div className="p-4">Neplatné ID profilu</div>
   }
 
+  const caller = await getServerCaller()
   const todayLocal = formatInTimeZone(
     new Date(),
     getDeviceTimeZone(),
-    "yyyy-MM-dd HH:mm:ss"
-  );
-  const stats = await getFeedStats(babyId, todayLocal);
+    "yyyy-MM-dd'T'HH:mm:ss"
+  )
 
-  const baby = (await prisma.baby.findUnique({
-    where: { id: babyId },
-    include: {
-      measurements: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
-        include: {
-          baby: true,
-        },
-      },
-      feeds: {
-        include: {
-          baby: true,
-        },
-      },
-      poops: {
-        include: {
-          baby: true,
-        },
-      },
-    },
-  })) as Baby | null;
+  const stats = await caller.feed.getStats({
+    babyId,
+    date: todayLocal,
+    timezone: getDeviceTimeZone()
+  })
 
-  if (!baby) return <div>Baby not found</div>;
+  const baby = await caller.baby.getById({ id: babyId })
 
-  // Get average feed amount for the all days in db
-  const allMeasurements = (await prisma.feed.findMany({
-    where: { babyId },
-    orderBy: { createdAt: "desc" },
-  })) as Feed[];
+  if (!baby) return <div className="p-4">Profil nenalezen</div>
 
-  // Function to calculate average feeds per day from count of unique days with feeds and feeds in that day
-  const calculateAverageFeeds = (feeds: Feed[]) => {
-    const uniqueDays = new Set(
-      feeds.map((feed) =>
-        formatInTimeZone(feed.feedTime, getDeviceTimeZone(), "yyyy-MM-dd")
-      )
-    );
-    return Math.round(feeds.length / uniqueDays.size);
-  };
-
-  const foods = await prisma.food.findMany();
+  // Average feeds logic is now simplified or handled inside stats if needed.
+  // For now, let's use the stats target feeds.
+  const targetFeeds = stats.feedsPerDay || 10
+  const progressPercent = stats.targetMilk > 0 ? (stats.totalMilk / stats.targetMilk) * 100 : 0
 
   return (
-    <div className="max-w-md mx-auto p-4 pb-20">
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-baby-accent mb-1">
-          {baby.name}
-        </h1>
-        <p className="text-baby-soft">Denní přehled ...</p>
-        <p>Aktuální čas: {todayLocal.toString()}</p>
-        <p className="text-sm text-gray-500">
-          Časová zóna: {getDeviceTimeZone()}
-        </p>
-      </div>
+    <div className="min-h-screen safe-area-top safe-area-bottom pb-20 bg-bg-primary">
+      <PageHeader title={baby.name} subtitle={`Dnešní přehled`} />
 
-      <div className="space-y-4 mt-6">
-        <FeedSection initialStats={stats} baby={baby} type={'info'} />
-      </div>
-
-      {/* Quick Add Feed */}
-      <h2 className="text-lg font-semibold text-baby-accent mt-6 mb-2">
-        Přidat krmení
-      </h2>
-      <div className="bg-cardbg rounded-lg shadow-lg p-6">
-        <form action={createFeed} className="space-y-4">
-          <input type="hidden" name="babyId" value={baby.id} />
-          <div className="space-y-2">
-            <label className="block text-sm text-baby-soft">Čas krmení</label>
-            <input
-              type="datetime-local"
-              name="feedTime"
-              required
-              defaultValue={formatInTimeZone(
-                new Date(),
-                "Europe/Prague",
-                "yyyy-MM-dd'T'HH:mm"
-              )}
-              className="w-full p-3 border border-baby-pink/20 rounded-lg bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
+      <div className="p-4 space-y-6">
+        
+        {/* Today's Progress Card */}
+        <Card variant="glass" className="p-6">
+          <div className="flex flex-col items-center mb-6">
+            <ProgressRing 
+              progress={progressPercent} 
+              size={160} 
+              strokeWidth={14}
+              label={`${stats.totalMilk} ml`}
+              sublabel={`z ${stats.targetMilk} ml`}
             />
           </div>
-          <div className="space-y-2">
-            <label className="block text-sm text-baby-soft">
-              Množství (ml)
-            </label>
-            <input
-              type="number"
-              name="amount"
-              required
-              defaultValue={
-                stats.averageAmount >= stats.remainingMilk
-                  ? stats.remainingMilk
-                  : stats.averageAmount
-              }
-              className="w-full p-3 border border-baby-pink/20 rounded-lg bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
-            />
-            <div className="space-y-2">
-              <label className="block text-sm text-baby-soft">Typ krmení</label>
-              <select
-                name="type"
-                required
-                defaultValue="main"
-                className="w-full p-3 border border-baby-pink/20 rounded-lg bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
-              >
-                <option value="main">Hlavní</option>
-                <option value="additional">Doplňkové</option>
-              </select>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-bg-elevated p-4 rounded-xl text-center">
+              <span className="block text-text-muted text-xs font-medium uppercase mb-1">Zbývá vypít</span>
+              <span className="text-xl font-bold text-text-primary">{stats.remainingMilk} ml</span>
             </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm text-baby-soft">Jídlo</label>
-              <select
-                name="foodId"
-                required
-                className="w-full p-3 border border-baby-pink/20 rounded-lg bg-white/50 focus:outline-none focus:ring-2 focus:ring-baby-accent/50"
-              >
-                {foods.map((food) => (
-                  <option key={food.id} value={food.id}>
-                    {food.name}
-                  </option>
-                ))}
-              </select>
+            <div className="bg-bg-elevated p-4 rounded-xl text-center">
+              <span className="block text-text-muted text-xs font-medium uppercase mb-1">Počet krmení</span>
+              <span className="text-xl font-bold text-text-primary">{stats.feedCount} / {targetFeeds}</span>
+            </div>
+            <div className="bg-bg-elevated p-4 rounded-xl text-center col-span-2 flex justify-between items-center">
+              <span className="text-text-muted text-xs font-medium uppercase">Průměrná dávka</span>
+              <span className="text-lg font-bold text-text-primary">{stats.averageAmount} ml</span>
             </div>
           </div>
-          <SubmitButton>Přidat krmení</SubmitButton>
-        </form>
-      </div>
+        </Card>
 
-      {/* Today's Progress */}
-      <h2 className="text-lg font-semibold text-baby-accent mb-2 mt-6">
-        Dnešní přehled
-      </h2>
-      <div className="rounded-lg p-6 bg-cardbg shadow-md ">
-        <div className="grid grid-cols-2 gap-4">
-          {/* <StatsItem label="Váha" value={latestMeasurement.weight} units='g' />
-               <StatsItem label="Délka" value={latestMeasurement.height} units='cm' /> */}
-          <StatsItem label="Mlíčko Celkem" value={stats.totalMilk} units="ml" />
-          <StatsItem
-            label="Zbývá vypít"
-            value={stats.remainingMilk}
-            units="ml"
-          />
-          <StatsItem
-            label="Krmení"
-            value={`${stats.feedCount} / ${calculateAverageFeeds(
-              allMeasurements
-            )}`}
-          />
-          <StatsItem
-            label="Průmerné množství"
-            value={Math.round(stats.totalMilk / stats.feedCount)}
-            units="ml"
-          />
-        </div>
+        {/* Quick Add Feed */}
+        <AddFeedSheet 
+          babyId={baby.id} 
+          averageAmount={stats.averageAmount} 
+          remainingAmount={stats.remainingMilk} 
+        />
 
-        {/* Progress Bar */}
-        <div className="mt-6">
-          <div className="w-full bg-baby-rose/20 rounded-full h-4">
-            <div
-              className="bg-baby-accent h-4 rounded-full transition-all duration-500"
-              style={{
-                width: `${Math.min(
-                  100,
-                  (stats.totalMilk / stats.targetMilk) * 100
-                )}%`,
-              }}
-            />
-          </div>
-          <p className="text-center text-sm text-baby-soft mt-2">
-            {Math.round((stats.totalMilk / stats.targetMilk) * 100)}% of denního
-            cíle
-          </p>
-        </div>
-      </div>
+        {/* Feed History (Today) */}
+        <FeedSection babyId={baby.id} type="list" />
 
-      {/* Feed Section */}
-      <div className="space-y-4 mt-6">
-        <FeedSection initialStats={stats} baby={baby} type={'list'} />
       </div>
     </div>
-  );
+  )
 }

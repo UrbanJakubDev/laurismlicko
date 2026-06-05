@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect } from 'react'
 
 type PinContextType = {
   isAuthenticated: boolean
-  authenticate: (pin: string) => boolean
+  authenticate: (pin: string) => Promise<boolean>
   logout: () => void
 }
 
@@ -21,13 +21,26 @@ export function PinProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const authenticate = (pin: string) => {
-    if (pin === process.env.NEXT_PUBLIC_APP_PIN) {
-      setIsAuthenticated(true)
-      localStorage.setItem('pin-auth', 'true')
-      return true
+  const authenticate = async (pin: string) => {
+    try {
+      const response = await fetch('/api/auth/pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin }),
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        setIsAuthenticated(true)
+        localStorage.setItem('pin-auth', 'true')
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error('PIN authentication error:', error)
+      return false
     }
-    return false
   }
 
   const logout = () => {

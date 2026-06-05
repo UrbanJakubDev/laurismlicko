@@ -1,7 +1,9 @@
-// app/components/DayPicker.tsx
 'use client'
 import { format, addDays, subDays } from 'date-fns'
-import { FaCircleChevronLeft, FaCircleChevronRight } from 'react-icons/fa6'
+import { cs } from 'date-fns/locale'
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa6'
+import { Card } from './ui/Card'
+
 export function DayPicker({ 
   selectedDate, 
   onChange 
@@ -9,28 +11,34 @@ export function DayPicker({
   selectedDate: Date
   onChange: (date: Date) => void
 }) {
+  const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+
   return (
-    <div className="flex items-center justify-between mb-4 bg-cardbg border border-gray-100 shadow-md rounded-lg">
+    <Card className="flex items-center justify-between p-2">
       <button
         onClick={() => onChange(subDays(selectedDate, 1))}
-        className="p-2 text-baby-accent hover:text-baby-soft text-3xl"
+        className="w-10 h-10 flex items-center justify-center rounded-full bg-bg-elevated text-text-secondary hover:bg-bg-primary transition-colors active:scale-95"
       >
-        <FaCircleChevronLeft />
+        <FaChevronLeft size={16} />
       </button>
       
-      <div className="text-center font-semibold">
-        {format(selectedDate, 'dd MMM yyyy') === format(new Date(), 'dd MMM yyyy') 
+      <div className="text-center font-semibold text-text-primary">
+        {isToday 
           ? 'Dnes' 
-          : format(selectedDate, 'dd MMM yyyy')}
+          : format(selectedDate, 'd. MMMM', { locale: cs })}
       </div>
 
       <button
         onClick={() => onChange(addDays(selectedDate, 1))}
-        disabled={format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')}
-        className="p-2 text-baby-accent hover:text-baby-soft disabled:opacity-50 text-3xl"
+        disabled={isToday}
+        className={`w-10 h-10 flex items-center justify-center rounded-full transition-colors ${
+          isToday 
+            ? 'opacity-30' 
+            : 'bg-bg-elevated text-text-secondary hover:bg-bg-primary active:scale-95'
+        }`}
       >
-        <FaCircleChevronRight />
+        <FaChevronRight size={16} />
       </button>
-    </div>
+    </Card>
   )
 }

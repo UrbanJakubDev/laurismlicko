@@ -1,11 +1,12 @@
-import { useState } from 'react';
-import { formatOutputTime } from '@/lib/utils';
-// Define the props for the FeedItem component
-interface FeedItemProps {
-    feed: FeedItem
-}
+import { useState } from 'react'
+import { formatOutputTime } from '@/lib/utils'
+import { trpc } from '@/trpc/client'
+import { Card } from '../ui/Card'
+import { motion, AnimatePresence } from 'framer-motion'
+import { FaTrash } from 'react-icons/fa6'
 
-type FeedItem = {
+interface FeedItemProps {
+  feed: {
     id: number
     createdAt: string
     updatedAt: string
@@ -15,113 +16,92 @@ type FeedItem = {
     type: string
     foodId: number
     food: {
+      name: string
+      emoji: string
+      unit: {
         name: string
         emoji: string
-        unit: {
-            name: string
-            emoji: string
-        }
+      }
     }
     timeSinceLastFeed: string
+  }
 }
 
-// Define the FeedItem component
-
-// {
-//     "id": 897,
-//     "createdAt": "2025-02-08T15:16:01.495Z",
-//     "updatedAt": "2025-02-08T15:16:01.495Z",
-//     "babyId": 3,
-//     "feedTime": "2025-02-08T16:15:00.000Z",
-//     "amount": 20,
-//     "type": "additional",
-//     "foodId": 4,
-//     "food": {
-//       "name": "Mléko",
-//       "emoji": "🍼",
-//       "unit": {
-//         "name": "ml",
-//         "emoji": "💧"
-//       }
-//     },
-//     "timeSinceLastFeed": "00:00"
-//   }
-
 export default function FeedItem({ feed }: FeedItemProps) {
-
-    const [isExpanded, setIsExpanded] = useState(false);
-
-    const handleDelete = async (id: number) => {
-        try {
-            const response = await fetch(`/api/feeds/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            if (!response.ok) {
-                console.error('Failed to delete feed');
-                return;
-            }
-
-            // Refresh the page to show updated data
-            window.location.reload();
-        } catch (error) {
-            console.error('Error deleting feed:', error);
-        }
+  const [isExpanded, setIsExpanded] = useState(false)
+  const utils = trpc.useUtils()
+  
+  const deleteFeed = trpc.feed.delete.useMutation({
+    onSuccess: () => {
+      utils.feed.getStats.invalidate()
     }
+  })
 
-    const renderExpandedFeed = () => {
-        return (
-            <button className="bg-red-500 text-white px-4 py-2 rounded-md" onClick={() => handleDelete(feed.id)}>Smazat</button>
-        )
-    }
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    deleteFeed.mutate({ id: feed.id })
+  }
 
+  const isMain = feed.type === 'main'
 
-    const renderMainFeed = () => {
-        return (
-            <div className="bg-cardbg shadow-md rounded-lg p-4 mb-4" onClick={() => setIsExpanded(!isExpanded)}>
-                <div className="flex justify-between items-center mb-2">
-                    <div className="flex flex-col items-start gap-2">
-                        <p className="text-2xl font-semibold">{feed.food?.emoji} {feed.food?.name || 'N/A'}</p>
-                        <p className="text-xl font-semibold text-baby-accent">{formatOutputTime(new Date(feed.feedTime))}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                        <p className="text-xl font-semibold ">{feed.food?.unit?.emoji} {feed.amount} {feed.food?.unit?.name || 'ml'}</p>
-                        <p className="font-semibold">{feed.type === 'main' ? 'Hlavní' : 'Doplnkové'}</p>
-                    </div>
-                </div>
-                <p className="text-xs text-gray-500 text-right">od posledního krmení: {feed.timeSinceLastFeed || 'N/A'}</p>
+  return (
+    <Card 
+      variant={isMain ? 'elevated' : 'flat'}
+      className={`mb-3 overflow-hidden cursor-pointer transition-colors ${
+        !isMain ? 'bg-bg-elevated' : ''
+      }`}
+      onClick={() => setIsExpanded(!isExpanded)}
+    >
+      <div className="p-4">
+        <div className="flex justify-between items-center">
+          <div className="flex flex-col items-start gap-1">
+            <p className="text-lg font-bold text-text-primary">
+              <span className="mr-2 text-xl">{feed.food?.emoji}</span>
+              {feed.food?.name || 'N/A'}
+            </p>
+            <p className={`text-sm font-semibold ${isMain ? 'text-accent-primary' : 'text-text-secondary'}`}>
+              {formatOutputTime(new Date(feed.feedTime))}
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            <p className="text-lg font-bold text-text-primary">
+              <span className="text-text-muted text-sm mr-1">{feed.food?.unit?.emoji}</span> 
+              {feed.amount} <span className="text-sm font-medium text-text-secondary">{feed.food?.unit?.name || 'ml'}</span>
+            </p>
+            <p className="text-xs font-medium text-text-muted uppercase tracking-wider">
+              {isMain ? 'Hlavní' : 'Doplňkové'}
+            </p>
+          </div>
+        </div>
 
-                {isExpanded && renderExpandedFeed()}
+        {feed.timeSinceLastFeed && (
+          <p className="text-xs font-medium text-text-muted text-right mt-2">
+            od posl. krmení: {feed.timeSinceLastFeed}
+          </p>
+        )}
+      </div>
+
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="border-t border-bg-elevated/50"
+          >
+            <div className="p-3 flex justify-end bg-error/5">
+              <button
+                onClick={handleDelete}
+                disabled={deleteFeed.isPending}
+                className="flex items-center gap-2 px-4 py-2 bg-error text-white rounded-lg text-sm font-bold active:scale-95 transition-transform disabled:opacity-50"
+              >
+                <FaTrash />
+                {deleteFeed.isPending ? 'Mažu...' : 'Smazat krmení'}
+              </button>
             </div>
-        )
-    }
-
-    const renderAdditionalFeed = () => {
-        return (
-            <div className="bg-gray-200 shadow-md rounded-lg p-4 mb-4" onClick={() => setIsExpanded(!isExpanded)}>
-                <div className="flex justify-between items-center mb-2">
-                    <div className="flex flex-col items-start gap-2">
-                        <p className="">{feed.food?.emoji} {feed.food?.name || 'N/A'}</p>
-                        <p className=" text-baby-accent">{formatOutputTime(new Date(feed.feedTime))}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                        <p className=" ">{feed.food?.unit?.emoji} {feed.amount} {feed.food?.unit?.name || 'ml'}</p>
-                        <p className="">{feed.type === 'main' ? 'Hlavní' : 'Doplnkové'}</p>
-                    </div>
-                </div>
-
-                {isExpanded && renderExpandedFeed()}
-            </div>
-        )
-    }
-    
-
-    return (
-        <>
-            {feed.type === 'main' ? renderMainFeed() : renderAdditionalFeed()}
-        
-        </>
-    )
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Card>
+  )
 }
