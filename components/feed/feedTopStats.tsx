@@ -1,4 +1,4 @@
-import { formatOutputTime } from "@/lib/utils"
+import { formatDuration, formatOutputTime } from "@/lib/utils"
 import { Card } from "../ui/Card"
 
 type FeedTopStatsProps = {
@@ -9,6 +9,7 @@ type FeedTopStatsProps = {
     feeds: Array<{
       foodId: number
       amount: number
+      feedTime?: string
       food: {
         emoji: string
       }
@@ -41,7 +42,7 @@ export default function FeedTopStats({ stats, medianTimeDifference }: FeedTopSta
       <div className="flex justify-between items-center border-b border-bg-elevated pb-4">
         <h4 className="text-text-secondary font-medium">Poslední jídlo</h4>
         <div className="text-xl font-bold text-text-primary">
-          {lastFeedTime ? new Date(lastFeedTime).toUTCString().split(' ')[4].substring(0, 5) : '--:--'}
+          {lastFeedTime ? formatOutputTime(new Date(lastFeedTime)) : '--:--'}
         </div>
       </div>
 
@@ -78,7 +79,7 @@ export default function FeedTopStats({ stats, medianTimeDifference }: FeedTopSta
         </div>
         <div className="text-right">
           <h4 className="text-xs text-text-secondary font-medium mb-1">Průměrná pauza</h4>
-          <p className="text-lg font-bold text-text-primary">{formatOutputTime(new Date(medianTimeDifference))}</p>
+          <p className="text-lg font-bold text-text-primary">{formatDuration(medianTimeDifference)}</p>
         </div>
       </div>
     </Card>
