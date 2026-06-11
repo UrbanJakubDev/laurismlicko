@@ -3,36 +3,17 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { DayPicker } from "../DatePicker";
 import FeedList from "./feedList";
+import type { FeedListItem } from "./feedItem";
 import FeedTopStats from "./feedTopStats";
 import { trpc } from "@/trpc/client";
 import { getDeviceTimeZone } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
-type Feed = {
-  id: number;
-  feedTime: string;
-  amount: number;
-  type: string;
-  foodId: number;
-  food: {
-    name: string;
-    emoji: string;
-    unit: {
-      name: string;
-      emoji: string;
-    };
-  };
-  timeSinceLastFeed: string;
-  createdAt: string;
-  updatedAt: string;
-  babyId: number;
-};
-
 type StatsType = {
-  timeSinceLastFeed: string;
+  timeSinceLastFeed: string | null;
   totalMilk: number;
   feedCount: number;
-  feeds: Feed[];
+  feeds: FeedListItem[];
 };
 
 export function FeedSection({
@@ -59,7 +40,7 @@ export function FeedSection({
   // Calculate median time difference
   const medianTimeDifference =
     currentStats?.feeds && currentStats.feeds.length > 1
-      ? currentStats.feeds.reduce((total: number, feed: Feed, index: number) => {
+      ? currentStats.feeds.reduce((total: number, feed: FeedListItem, index: number) => {
           if (index === 0) return 0;
           const timeDiff =
             new Date(feed.feedTime).getTime() -

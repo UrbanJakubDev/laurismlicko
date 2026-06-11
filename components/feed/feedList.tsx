@@ -1,9 +1,9 @@
-import { Feed } from "@prisma/client"
 import FeedItem from "./feedItem"
+import type { FeedListItem } from "./feedItem"
 
 
 type FeedListProps = {
-    feeds: Feed[]
+    feeds: FeedListItem[]
 }
 
 export default function FeedList({ feeds }: FeedListProps) {

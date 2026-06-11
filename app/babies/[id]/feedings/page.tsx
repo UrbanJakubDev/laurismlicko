@@ -20,7 +20,7 @@ export default function FeedingsPage({
          <PageHeader title="Historie krmení" subtitle={baby?.name} />
 
          <div className="p-4">
-            <FeedSection babyId={babyId} />
+            <FeedSection babyId={babyId} type="full" />
          </div>
       </div>
    )
