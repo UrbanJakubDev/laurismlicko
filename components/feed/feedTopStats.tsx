@@ -3,7 +3,7 @@ import { Card } from "../ui/Card"
 
 type FeedTopStatsProps = {
   stats: {
-    timeSinceLastFeed: string
+    timeSinceLastFeed: string | null
     totalMilk: number
     feedCount: number
     feeds: Array<{
@@ -11,7 +11,7 @@ type FeedTopStatsProps = {
       amount: number
       feedTime?: string
       food: {
-        emoji: string
+        emoji: string | null
       }
     }>
   }
@@ -86,6 +86,10 @@ export default function FeedTopStats({ stats, medianTimeDifference }: FeedTopSta
   )
 }
 
-function getFoodEmojis(feeds: Array<{ foodId: number; amount: number; food: { emoji: string } }>): Set<string> {
-  return new Set(feeds.filter(feed => feed.foodId !== 4).map(feed => feed.food.emoji))
+function getFoodEmojis(feeds: Array<{ foodId: number; amount: number; food: { emoji: string | null } }>): Set<string> {
+  return new Set(
+    feeds
+      .filter((feed) => feed.foodId !== 4 && feed.food.emoji)
+      .map((feed) => feed.food.emoji as string)
+  )
 }
