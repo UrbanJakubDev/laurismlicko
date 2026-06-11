@@ -1,6 +1,19 @@
 import { z } from 'zod'
 import { publicProcedure, router } from '../trpc'
 
+const MILK_AMOUNT_PER_KG = 150
+const FEEDS_PER_DAY = 6
+
+function calculateMilkAmounts(weight: number) {
+  const dailyMilkAmount = Math.round((weight / 1000) * MILK_AMOUNT_PER_KG)
+
+  return {
+    dailyMilkAmount,
+    feedsPerDay: FEEDS_PER_DAY,
+    averageFeedAmount: Math.round(dailyMilkAmount / FEEDS_PER_DAY),
+  }
+}
+
 export const measurementRouter = router({
   list: publicProcedure
     .input(z.object({
@@ -23,16 +36,33 @@ export const measurementRouter = router({
       // averageFeedAmount = dailyMilkAmount / targetFeeds (usually 6-8, let's use 6 as base or just calculate from weight)
     }))
     .mutation(async ({ ctx, input }) => {
-      const dailyMilkAmount = (input.weight / 1000) * 150
-      const averageFeedAmount = dailyMilkAmount / 6
+      const milkAmounts = calculateMilkAmounts(input.weight)
 
       return ctx.prisma.babyMeasurement.create({
         data: {
           babyId: input.babyId,
           weight: input.weight,
           height: input.height,
-          dailyMilkAmount,
-          averageFeedAmount,
+          ...milkAmounts,
+        },
+      })
+    }),
+
+  update: publicProcedure
+    .input(z.object({
+      id: z.number(),
+      weight: z.number().min(0),
+      height: z.number().min(0),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const milkAmounts = calculateMilkAmounts(input.weight)
+
+      return ctx.prisma.babyMeasurement.update({
+        where: { id: input.id },
+        data: {
+          weight: input.weight,
+          height: input.height,
+          ...milkAmounts,
         },
       })
     }),
