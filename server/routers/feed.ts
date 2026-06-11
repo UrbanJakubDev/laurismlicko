@@ -152,6 +152,34 @@ export const feedRouter = router({
       })
     }),
 
+  update: publicProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        feedTime: z.string(),
+        amount: z.number(),
+        type: z.enum(['main', 'additional']),
+        foodId: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const feedTime = new Date(input.feedTime)
+
+      if (isNaN(feedTime.getTime())) {
+        throw new Error('Neplatný čas krmení')
+      }
+
+      return ctx.prisma.feed.update({
+        where: { id: input.id },
+        data: {
+          feedTime,
+          amount: input.amount,
+          type: input.type,
+          foodId: input.foodId,
+        },
+      })
+    }),
+
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
