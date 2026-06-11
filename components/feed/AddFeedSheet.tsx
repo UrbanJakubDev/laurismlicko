@@ -6,6 +6,7 @@ import { Button } from '../ui/Button'
 import { SegmentedControl } from '../ui/SegmentedControl'
 import { format } from 'date-fns'
 
+import { getNotificationDelayMinutes } from '@/lib/utils'
 import { NotificationModal } from './NotificationModal'
 import { usePush } from '../providers/PushProvider'
 
@@ -36,7 +37,7 @@ export function AddFeedSheet({ babyId, averageAmount, remainingAmount, onSuccess
   const utils = trpc.useUtils()
   
   const createFeed = trpc.feed.create.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
       utils.feed.getStats.invalidate()
       utils.baby.getById.invalidate()
       
@@ -56,7 +57,7 @@ export function AddFeedSheet({ babyId, averageAmount, remainingAmount, onSuccess
           const hours = parseFloat(localStorage.getItem('notify-hours') || '2.5')
           scheduleNotification.mutate({
             subscription: sub,
-            delayMinutes: Math.round(hours * 60),
+            delayMinutes: getNotificationDelayMinutes(variables.feedTime, hours),
             title: '🍼 Čas na krmení!',
             message: `Uběhlo ${hours}h od posledního krmení. Je čas nakrmit miminko.`
           })
@@ -162,6 +163,7 @@ export function AddFeedSheet({ babyId, averageAmount, remainingAmount, onSuccess
         onComplete={() => {
           // Additional logic if needed, but onClose is called anyway
         }}
+        feedTime={feedTime}
         defaultHours={2.5}
       />
     </div>

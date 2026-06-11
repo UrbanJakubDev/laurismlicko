@@ -27,3 +27,18 @@ export function formatDuration(durationMs: number) {
 export function getDeviceTimeZone() {
   return Intl.DateTimeFormat().resolvedOptions().timeZone;
 }
+
+// Minutes until feedTime + intervalHours; falls back to full interval if feedTime is invalid
+export function getNotificationDelayMinutes(
+  feedTime: Date | string,
+  intervalHours: number
+): number {
+  const feedAt = new Date(feedTime);
+  if (isNaN(feedAt.getTime())) {
+    return Math.round(intervalHours * 60);
+  }
+
+  const notifyAt = feedAt.getTime() + intervalHours * 60 * 60 * 1000;
+  const delayMinutes = Math.round((notifyAt - Date.now()) / 60000);
+  return Math.max(1, delayMinutes);
+}

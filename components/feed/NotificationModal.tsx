@@ -5,15 +5,17 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '../ui/Button'
 import { usePush } from '../providers/PushProvider'
 import { trpc } from '@/trpc/client'
+import { getNotificationDelayMinutes } from '@/lib/utils'
 
 interface NotificationModalProps {
   isOpen: boolean
   onClose: () => void
   onComplete: () => void
+  feedTime: string
   defaultHours?: number
 }
 
-export function NotificationModal({ isOpen, onClose, onComplete, defaultHours = 2.5 }: NotificationModalProps) {
+export function NotificationModal({ isOpen, onClose, onComplete, feedTime, defaultHours = 2.5 }: NotificationModalProps) {
   const { isSupported, isSubscribed, subscribe, subscription } = usePush()
   const scheduleNotification = trpc.feed.scheduleNotification.useMutation()
   
@@ -41,10 +43,10 @@ export function NotificationModal({ isOpen, onClose, onComplete, defaultHours = 
       localStorage.setItem('notify-hours', hours.toString())
     }
 
-    // Schedule via QStash
+    // Schedule via QStash — delay from feed time, not from when user confirms
     scheduleNotification.mutate({
       subscription: sub,
-      delayMinutes: Math.round(hours * 60),
+      delayMinutes: getNotificationDelayMinutes(feedTime, hours),
       title: '🍼 Čas na krmení!',
       message: `Uběhlo ${hours}h od posledního krmení. Je čas nakrmit miminko.`
     }, {
